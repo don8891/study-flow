@@ -1,0 +1,41 @@
+body {
+  font-family: Arial, sans-serif;
+  background-color: #0f172a;
+  color: white;
+}
+
+button {
+  margin: 5px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  background-color: #38bdf8;
+  cursor: pointer;
+}
+
+.auth-container {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #0f172a;
+}
+
+.auth-card {
+  width: 320px;
+  padding: 25px;
+  background-color: #020617;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.auth-card input {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+}
+
+.auth-card button {
+  width: 100%;
+  margin-top: 15px;
+}
