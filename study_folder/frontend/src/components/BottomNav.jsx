@@ -1,23 +1,30 @@
-function BottomNav({ setPage }) {
+function BottomNav({ page, setPage }) {
   return (
-    <div style={styles.nav}>
-      <button onClick={() => setPage("dashboard")}>Dashboard</button>
-      <button onClick={() => setPage("upload")}>Upload</button>
-      <button onClick={() => setPage("planner")}>Planner</button>
+    <div className="bottom-nav">
+      <button
+        className={page === "home" ? "active" : ""}
+        onClick={() => setPage("home")}
+      >
+        Home
+      </button>
+
+      <button
+        className={page === "calendar" ? "active" : ""}
+        onClick={() => setPage("calendar")}
+      >
+        Calendar
+      </button>
+
+      <button
+        className={page === "profile" ? "active" : ""}
+        onClick={() => setPage("profile")}
+      >
+        Profile
+      </button>
     </div>
   );
 }
 
-const styles = {
-  nav: {
-    position: "fixed",
-    bottom: 0,
-    width: "100%",
-    display: "flex",
-    justifyContent: "space-around",
-    backgroundColor: "#1e293b",
-    padding: "10px"
-  }
-};
-
 export default BottomNav;
+
+

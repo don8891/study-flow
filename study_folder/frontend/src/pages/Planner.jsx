@@ -1,10 +1,16 @@
+import Card from "../components/Card";
+
 function Planner() {
   return (
-    <div>
+    <div className="page">
       <h2>Study Planner</h2>
-      <p>Calendar view will appear here</p>
+
+      <Card title="Upcoming Tasks">
+        <p>No tasks generated yet.</p>
+      </Card>
     </div>
   );
 }
 
 export default Planner;
+

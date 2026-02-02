@@ -1,21 +1,22 @@
 import { useState } from "react";
 import Dashboard from "./Dashboard";
-import Upload from "./Upload";
 import Planner from "./Planner";
+import Profile from "./Profile";
 import BottomNav from "../components/BottomNav";
 
 function Home() {
-  const [page, setPage] = useState("dashboard");
+  const [page, setPage] = useState("home");
 
   return (
-    <div style={{ paddingBottom: "60px" }}>
-      {page === "dashboard" && <Dashboard />}
-      {page === "upload" && <Upload />}
-      {page === "planner" && <Planner />}
+    <div style={{ paddingBottom: "80px" }}>
+      {page === "home" && <Dashboard />}
+      {page === "calendar" && <Planner />}
+      {page === "profile" && <Profile />}
 
-      <BottomNav setPage={setPage} />
+      <BottomNav page={page} setPage={setPage} />
     </div>
   );
 }
 
 export default Home;
+
