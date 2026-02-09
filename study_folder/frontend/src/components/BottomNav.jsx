@@ -1,3 +1,5 @@
+import { LayoutDashboard, CalendarKey, User } from "./Icons";
+
 function BottomNav({ page, setPage }) {
   return (
     <div className="bottom-nav">
@@ -5,26 +7,27 @@ function BottomNav({ page, setPage }) {
         className={page === "home" ? "active" : ""}
         onClick={() => setPage("home")}
       >
-        Home
+        <LayoutDashboard size={24} />
+        <span>Home</span>
       </button>
 
       <button
         className={page === "calendar" ? "active" : ""}
         onClick={() => setPage("calendar")}
       >
-        Calendar
+        <CalendarKey size={24} />
+        <span>Plan</span>
       </button>
 
       <button
         className={page === "profile" ? "active" : ""}
         onClick={() => setPage("profile")}
       >
-        Profile
+        <User size={24} />
+        <span>Profile</span>
       </button>
     </div>
   );
 }
 
 export default BottomNav;
-
-
