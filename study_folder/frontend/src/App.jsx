@@ -7,21 +7,30 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [authPage, setAuthPage] = useState("login");
 
+  const handleLogin = () => {
+    setIsLoggedIn(true);
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setAuthPage("login");
+  };
+
   if (!isLoggedIn) {
     return authPage === "login" ? (
       <Login
-        onLogin={() => setIsLoggedIn(true)}
+        onLogin={handleLogin}
         goToRegister={() => setAuthPage("register")}
       />
     ) : (
       <Register
-        onRegister={() => setIsLoggedIn(true)}
+        onRegister={handleLogin}
         goToLogin={() => setAuthPage("login")}
       />
     );
   }
 
-  return <Home />;
+  return <Home onLogout={handleLogout} />;
 }
 
 export default App;

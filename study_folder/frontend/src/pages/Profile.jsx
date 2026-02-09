@@ -1,24 +1,20 @@
 import Card from "../components/Card";
 
-function Profile() {
-  const user = {
-    email: "user@example.com"
-  };
-
+function Profile({ onLogout }) {
   return (
     <div className="page">
       <h2>Profile</h2>
 
       <Card title="Account">
-        <p>Email: {user.email}</p>
+        <p>Email: user@example.com</p>
       </Card>
 
-      <Card title="Statistics">
-        <p>Total study hours: 0</p>
-        <p>Current streak: 0 days</p>
-      </Card>
-
-      <button style={{ width: "100%" }}>
+      <button
+        style={{ width: "100%" }}
+        onClick={() => {
+          onLogout();
+        }}
+      >
         Logout
       </button>
     </div>

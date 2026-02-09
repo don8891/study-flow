@@ -4,14 +4,14 @@ import Planner from "./Planner";
 import Profile from "./Profile";
 import BottomNav from "../components/BottomNav";
 
-function Home() {
+function Home({ onLogout }) {
   const [page, setPage] = useState("home");
 
   return (
     <div style={{ paddingBottom: "80px" }}>
       {page === "home" && <Dashboard />}
       {page === "calendar" && <Planner />}
-      {page === "profile" && <Profile />}
+      {page === "profile" && <Profile onLogout={onLogout} />}
 
       <BottomNav page={page} setPage={setPage} />
     </div>
@@ -19,4 +19,3 @@ function Home() {
 }
 
 export default Home;
-
