@@ -1,6 +1,8 @@
 import { useState } from "react";
 import AuthLayout from "../components/AuthLayout";
 import { registerUser } from "../api/api";
+import { auth } from "../firebase";
+import { createUserProfile } from "../api/firestore";
 
 function Register({ onRegister, goToLogin }) {
   const [email, setEmail] = useState("");
@@ -9,6 +11,7 @@ function Register({ onRegister, goToLogin }) {
   async function handleRegister() {
     try {
       await registerUser(email, password);
+      await createUserProfile(auth.currentUser);
       onRegister();
     } catch (err) {
       alert(err.message);
