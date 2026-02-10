@@ -1,22 +1,20 @@
-export async function checkBackend() {
-  const res = await fetch("http://127.0.0.1:5000/health");
-  return res.json();
-}
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut
+} from "firebase/auth";
+import { auth } from "../firebase";
 
 export async function registerUser(email, password) {
-  const res = await fetch("http://127.0.0.1:5000/register", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password })
-  });
-  return res.json();
+  await createUserWithEmailAndPassword(auth, email, password);
+  return { success: true };
 }
 
 export async function loginUser(email, password) {
-  const res = await fetch("http://127.0.0.1:5000/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password })
-  });
-  return res.json();
+  await signInWithEmailAndPassword(auth, email, password);
+  return { success: true };
+}
+
+export async function logoutUser() {
+  await signOut(auth);
 }

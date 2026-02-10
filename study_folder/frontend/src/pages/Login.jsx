@@ -7,11 +7,11 @@ function Login({ onLogin, goToRegister }) {
   const [password, setPassword] = useState("");
 
   async function handleLogin() {
-    const res = await loginUser(email, password);
-    if (res.success) {
+    try {
+      await loginUser(email, password);
       onLogin();
-    } else {
-      alert(res.message);
+    } catch (err) {
+      alert(err.message);
     }
   }
 
