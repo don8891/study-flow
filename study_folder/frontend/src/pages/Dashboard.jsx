@@ -1,13 +1,13 @@
 import Card from "../components/Card";
 
-function Dashboard() {
+function Dashboard({ goToUpload }) {
   return (
     <div className="page">
       <h2>Dashboard</h2>
 
-      <Card title="Welcome">
-        <p>Your study flow dashboard powered by Firebase!</p>
-      </Card>
+      <button onClick={goToUpload} className="btn-sm">
+        Upload Syllabus
+      </button>
     </div>
   );
 }

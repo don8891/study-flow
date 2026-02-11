@@ -31,7 +31,7 @@ function Profile({ onLogout }) {
         </Card>
       )}
 
-      <button onClick={handleLogout} style={{ width: "100%" }}>
+      <button onClick={handleLogout} className="btn-danger btn-sm">
         Logout
       </button>
     </div>
