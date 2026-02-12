@@ -40,31 +40,32 @@ def clean_syllabus_text(text):
     return "\n".join(cleaned)
 
 def generate_structured_topics(text):
-    print("AI FUNCTION CALLED")
+    print(f"DEBUG: Generating topics for text length: {len(text)}")
     prompt = f"""
-    You are an academic planning assistant.
-
     Extract clear, concise study topics from this syllabus.
-    Remove duplicates.
-    Do not include numbering.
     Each topic must be short (max 8 words).
 
     Syllabus:
     {text}
     """
 
-    response = requests.post(
-        HF_API_URL,
-        headers=headers,
-        json={"inputs": prompt}
-    )
+    try:
+        response = requests.post(
+            HF_API_URL,
+            headers=headers,
+            json={"inputs": prompt}
+        )
+        print(f"DEBUG: HF Status: {response.status_code}")
+        result = response.json()
+        print(f"DEBUG: HF Result: {result}")
 
-    print("HF STATUS:", response.status_code)
-    result = response.json()
+        if isinstance(result, list) and len(result) > 0:
+            return result[0].get("generated_text", "")
+        return ""
+    except Exception as e:
+        print(f"DEBUG: HF Error: {str(e)}")
+        return ""
 
-    if isinstance(result, list) and len(result) > 0:
-        return result[0].get("generated_text", "")
-    return ""
 
 # TEMPORARY in-memory store
 users = {}
@@ -104,45 +105,43 @@ def login():
 
 @app.route("/upload-syllabus", methods=["POST"])
 def upload_syllabus():
-    if "file" not in request.files:
-        return {"success": False, "message": "No file"}, 400
-
     file = request.files["file"]
-    uid = request.form.get("uid")
 
-    if not uid:
-        return {"success": False, "message": "Missing UID"}, 400
-
-    filepath = os.path.join(UPLOAD_FOLDER, file.filename)
+    filepath = os.path.join("uploads", file.filename)
     file.save(filepath)
 
     extracted_text = ""
 
-    # PDF handling
-    if file.filename.lower().endswith(".pdf"):
+    if file.filename.endswith(".pdf"):
         reader = PdfReader(filepath)
         for page in reader.pages:
             extracted_text += page.extract_text() or ""
-
-    # Image handling
     else:
         image = Image.open(filepath)
         extracted_text = pytesseract.image_to_string(image)
 
     cleaned_text = clean_syllabus_text(extracted_text)
+    print(f"DEBUG: Cleaned text length: {len(cleaned_text)}")
+    
     topics_raw = generate_structured_topics(cleaned_text)
+    
+    # NEW Fallback Logic: If AI fails, use raw lines
+    if not topics_raw.strip():
+        print("DEBUG: AI failed or returned empty - using fallback extraction")
+        topics = [
+            line.strip()
+            for line in cleaned_text.split("\n")
+            if len(line.strip()) > 10 # Only lines with substantial content
+        ]
+    else:
+        topics = [
+            line.strip()
+            for line in topics_raw.split("\n")
+            if line.strip()
+        ]
 
-    # Convert AI string response to a clean list of topics
-    topics = [
-        line.strip()
-        for line in topics_raw.split("\n")
-        if len(line.strip()) > 5
-    ]
-
-    return jsonify({
-        "success": True,
-        "topics": topics
-    })
+    print(f"DEBUG: Final topics count: {len(topics)}")
+    return jsonify({"success": True, "topics": topics})
 
 if __name__ == "__main__":
     app.run(debug=True)

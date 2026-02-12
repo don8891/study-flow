@@ -289,3 +289,29 @@ button:active {
   justify-content: space-between;
   align-items: center;
 }
+
+.card {
+  padding: 24px;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.calendar-center {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.highlight {
+  background: linear-gradient(135deg, #38bdf8, #0ea5e9) !important;
+  color: white !important;
+  border-radius: 50%;
+  font-weight: bold;
+}
+
+.revision {
+  background: #22c55e !important;
+  color: white !important;
+  border-radius: 50%;
+  font-weight: bold;
+}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React from "react";
 import Card from "../components/Card";
 import { uploadSyllabus } from "../api/api";
 import { auth } from "../firebase";
@@ -8,7 +8,7 @@ import { saveStudyPlan } from "../api/firestore";
 function Upload({ file, setFile, examDate, setExamDate, status, setStatus, setPage }) {
   async function handleUpload() {
     if (!file || !examDate) {
-      alert("Please select syllabus and exam date");
+      alert("Please upload syllabus and select exam date");
       return;
     }
 
@@ -16,23 +16,40 @@ function Upload({ file, setFile, examDate, setExamDate, status, setStatus, setPa
     const exam = new Date(examDate);
     const totalDays = differenceInDays(exam, today);
 
-    if (totalDays <= 0) {
-      alert("Exam date must be in the future");
+    // Buffer Validation: Need at least 3 days for study + revision
+    if (totalDays < 3) {
+      alert("Your exam is too close! Please select a date at least 3 days away for a structured plan.");
       return;
     }
 
     const uid = auth.currentUser.uid;
-    setStatus("Generating Study Plan...");
+    setStatus("Generating Your Plan...");
 
     const res = await uploadSyllabus(file, uid);
 
     if (res.success) {
       const topics = res.topics;
-      const tasks = [];
 
+      if (topics.length === 0) {
+        alert("No clear topics were found in your syllabus. Please try a different file or check the file quality.");
+        setStatus("Generation failed - No topics found.");
+        return;
+      }
+
+      const tasks = [];
+      
+      // Reserve last 2 days for revision
+      const studyDays = totalDays - 2;
+      
+      // Map topics to study days
+      // Anti-Overload: Max 3 topics per day
       topics.forEach((topic, index) => {
-        const dayOffset = index % totalDays;
-        const studyDate = addDays(today, dayOffset);
+        const dayIndex = Math.floor(index / 3);
+        
+        // If topics exceed study days * 3, it will start overfilling earlier days
+        // but it's better than dropping topics.
+        const targetDay = dayIndex % studyDays;
+        const studyDate = addDays(today, targetDay);
 
         tasks.push({
           date: format(studyDate, "yyyy-MM-dd"),
@@ -42,10 +59,22 @@ function Upload({ file, setFile, examDate, setExamDate, status, setStatus, setPa
         });
       });
 
+      // Add Revision Buffer (Last 2 days)
+      const revisionStart = addDays(today, studyDays);
+      const examDayMinus1 = addDays(today, totalDays - 1);
+
+      [revisionStart, examDayMinus1].forEach(revDate => {
+        tasks.push({
+          date: format(revDate, "yyyy-MM-dd"),
+          topic: "Comprehensive Revision",
+          duration: "3 hours",
+          completed: false
+        });
+      });
+
       await saveStudyPlan(uid, tasks);
       setStatus("Study plan created successfully!");
       
-      // Automatically navigate to calendar after a short delay
       setTimeout(() => {
         setPage("calendar");
       }, 1500);
