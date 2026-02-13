@@ -5,10 +5,16 @@ import { auth } from "../firebase";
 import { differenceInDays, addDays, format } from "date-fns";
 import { saveStudyPlan } from "../api/firestore";
 
-function Upload({ file, setFile, examDate, setExamDate, status, setStatus, setPage }) {
+function Upload({ 
+  file, setFile, 
+  syllabusName, setSyllabusName,
+  examDate, setExamDate, 
+  status, setStatus, 
+  setPage, setActivePlanId 
+}) {
   async function handleUpload() {
-    if (!file || !examDate) {
-      alert("Please upload syllabus and select exam date");
+    if (!file || !examDate || !syllabusName.trim()) {
+      alert("Please provide a syllabus name, upload a file, and select an exam date.");
       return;
     }
 
@@ -16,9 +22,8 @@ function Upload({ file, setFile, examDate, setExamDate, status, setStatus, setPa
     const exam = new Date(examDate);
     const totalDays = differenceInDays(exam, today);
 
-    // Buffer Validation: Need at least 3 days for study + revision
     if (totalDays < 3) {
-      alert("Your exam is too close! Please select a date at least 3 days away for a structured plan.");
+      alert("Your exam is too close! Please select a date at least 3 days away.");
       return;
     }
 
@@ -31,23 +36,16 @@ function Upload({ file, setFile, examDate, setExamDate, status, setStatus, setPa
       const topics = res.topics;
 
       if (topics.length === 0) {
-        alert("No clear topics were found in your syllabus. Please try a different file or check the file quality.");
+        alert("No clear topics were found. Please try a different file.");
         setStatus("Generation failed - No topics found.");
         return;
       }
 
       const tasks = [];
-      
-      // Reserve last 2 days for revision
       const studyDays = totalDays - 2;
       
-      // Map topics to study days
-      // Anti-Overload: Max 3 topics per day
       topics.forEach((topic, index) => {
         const dayIndex = Math.floor(index / 3);
-        
-        // If topics exceed study days * 3, it will start overfilling earlier days
-        // but it's better than dropping topics.
         const targetDay = dayIndex % studyDays;
         const studyDate = addDays(today, targetDay);
 
@@ -59,7 +57,6 @@ function Upload({ file, setFile, examDate, setExamDate, status, setStatus, setPa
         });
       });
 
-      // Add Revision Buffer (Last 2 days)
       const revisionStart = addDays(today, studyDays);
       const examDayMinus1 = addDays(today, totalDays - 1);
 
@@ -72,7 +69,8 @@ function Upload({ file, setFile, examDate, setExamDate, status, setStatus, setPa
         });
       });
 
-      await saveStudyPlan(uid, tasks);
+      const planId = await saveStudyPlan(uid, tasks, syllabusName);
+      setActivePlanId(planId);
       setStatus("Study plan created successfully!");
       
       setTimeout(() => {
@@ -87,7 +85,16 @@ function Upload({ file, setFile, examDate, setExamDate, status, setStatus, setPa
     <div className="page">
       <h2>Generate Study Plan</h2>
 
-      <Card title="Syllabus">
+      <Card title="Syllabus Name">
+        <input
+          type="text"
+          placeholder="e.g. Physics 101, Final Exam"
+          value={syllabusName}
+          onChange={(e) => setSyllabusName(e.target.value)}
+        />
+      </Card>
+
+      <Card title="Upload Content">
         <input
           type="file"
           accept=".pdf,image/*"
