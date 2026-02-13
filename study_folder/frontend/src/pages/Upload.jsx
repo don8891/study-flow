@@ -43,10 +43,12 @@ function Upload({
 
       const tasks = [];
       const studyDays = totalDays - 2;
-      
+      // Map topics to study days using an Even Distribution algorithm
+      // This ensures topics are spread across the entire study period
+      // instead of being stacked at the beginning.
       topics.forEach((topic, index) => {
-        const dayIndex = Math.floor(index / 3);
-        const targetDay = dayIndex % studyDays;
+        // Calculate target day by spreading index across total studyDays
+        const targetDay = Math.floor(index * studyDays / topics.length);
         const studyDate = addDays(today, targetDay);
 
         tasks.push({

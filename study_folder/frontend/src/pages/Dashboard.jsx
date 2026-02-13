@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { auth } from "../firebase";
-import { getStudyPlan, getUserProfile, getStudyPlansList } from "../api/firestore";
+import { getStudyPlan, getUserProfile, getStudyPlansList, deleteStudyPlan } from "../api/firestore";
 import Card from "../components/Card";
 
 function Dashboard({ goToUpload, activePlanId, setActivePlanId }) {
@@ -10,18 +10,39 @@ function Dashboard({ goToUpload, activePlanId, setActivePlanId }) {
   const [plans, setPlans] = useState([]);
 
   useEffect(() => {
+    fetchPlans();
     const uid = auth.currentUser?.uid;
     if (uid) {
-      getStudyPlansList(uid).then(list => {
-        setPlans(list);
-        // If no active plan is set, pick the most recent one
-        if (!activePlanId && list.length > 0) {
-          setActivePlanId(list[0].id);
-        }
-      });
       getUserProfile(uid).then(setUserData);
     }
   }, [activePlanId]);
+
+  async function fetchPlans() {
+    const uid = auth.currentUser?.uid;
+    if (uid) {
+      const list = await getStudyPlansList(uid);
+      setPlans(list);
+      // If activePlanId is invalid or deleted, reset to first available
+      if (list.length > 0) {
+        if (!activePlanId || !list.find(p => p.id === activePlanId)) {
+          setActivePlanId(list[0].id);
+        }
+      } else {
+        setActivePlanId(null);
+      }
+    }
+  }
+
+  async function handleDelete() {
+    if (!activePlanId) return;
+    
+    const planName = plans.find(p => p.id === activePlanId)?.name || "this plan";
+    if (window.confirm(`Are you sure you want to delete "${planName}"? This cannot be undone.`)) {
+      const uid = auth.currentUser?.uid;
+      await deleteStudyPlan(uid, activePlanId);
+      await fetchPlans();
+    }
+  }
 
   useEffect(() => {
     const uid = auth.currentUser?.uid;
@@ -65,27 +86,39 @@ function Dashboard({ goToUpload, activePlanId, setActivePlanId }) {
               + New Plan
             </button>
           </div>
-          <select 
-            value={activePlanId || ""} 
-            onChange={(e) => setActivePlanId(e.target.value)}
-            style={{
-              background: "rgba(30, 41, 59, 0.8)",
-              color: "var(--text-main)",
-              border: "1px solid var(--border)",
-              padding: "8px 12px",
-              borderRadius: "10px",
-              outline: "none",
-              cursor: "pointer",
-              fontSize: "0.9rem",
-              width: "100%",
-              maxWidth: "220px"
-            }}
-          >
-            {plans.length === 0 && <option value="">No Plans Found</option>}
-            {plans.map(p => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-          </select>
+          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+            <select 
+              value={activePlanId || ""} 
+              onChange={(e) => setActivePlanId(e.target.value)}
+              style={{
+                background: "rgba(30, 41, 59, 0.8)",
+                color: "var(--text-main)",
+                border: "1px solid var(--border)",
+                padding: "8px 12px",
+                borderRadius: "10px",
+                outline: "none",
+                cursor: "pointer",
+                fontSize: "0.9rem",
+                flex: 1,
+                maxWidth: "220px"
+              }}
+            >
+              {plans.length === 0 && <option value="">No Plans Found</option>}
+              {plans.map(p => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+            {plans.length > 0 && (
+              <button 
+                onClick={handleDelete} 
+                className="btn-danger btn-sm"
+                style={{ padding: "8px", width: "36px", height: "36px", display: "flex", alignItems: "center", justifyContent: "center" }}
+                title="Delete Plan"
+              >
+                🗑️
+              </button>
+            )}
+          </div>
         </div>
         <div style={{ textAlign: "right", marginLeft: "15px" }}>
           <div style={{ fontSize: "1.5rem" }}>{level.icon}</div>
