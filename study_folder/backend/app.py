@@ -151,7 +151,10 @@ def ai_assistant():
 
     if task == "summary":
         prompt = f"""
-        Summarize the following syllabus clearly in structured bullet points:
+        Generate a comprehensive daily study plan from this syllabus. 
+        For each topic, include specific suggested study timings (e.g., 10:00 AM - 12:00 PM) 
+        and incorporate mandatory rest breaks (e.g., 12:00 PM - 12:30 PM) to ensure a balanced routine.
+        Use clear, structured bullet points.
 
         {content[:3000]}
         """

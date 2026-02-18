@@ -4,6 +4,93 @@ import { auth } from "../firebase";
 import { getStudyPlan, getUserProfile, getStudyPlansList, deleteStudyPlan } from "../api/firestore";
 import Card from "../components/Card";
 
+async function toggleTaskComplete(task, tasks, setTasks, activePlanId) {
+  const isNowCompleted = true; // Only marking as completed via timer
+  const updatedTasks = tasks.map(t =>
+    t.date === task.date && t.topic === task.topic
+      ? { ...t, completed: isNowCompleted }
+      : t
+  );
+
+  setTasks(updatedTasks);
+  const uid = auth.currentUser?.uid;
+  if (uid && activePlanId) {
+    await updatePlanTasks(uid, activePlanId, updatedTasks);
+    await recordActivity(uid);
+  }
+}
+
+function StudyTimer({ minutes, onComplete, completed }) {
+  const [seconds, setSeconds] = useState(parseInt(minutes) * 60 || 0);
+  const [isActive, setIsActive] = useState(false);
+  const [hasCompleted, setHasCompleted] = useState(false);
+
+  useEffect(() => {
+    let interval = null;
+    if (isActive && seconds > 0) {
+      interval = setInterval(() => {
+        setSeconds((prev) => prev - 1);
+      }, 1000);
+    } else if (seconds === 0 && isActive && !hasCompleted && !completed) {
+      setHasCompleted(true);
+      setIsActive(false);
+      if (onComplete) onComplete();
+      clearInterval(interval);
+    } else {
+      clearInterval(interval);
+    }
+    return () => clearInterval(interval);
+  }, [isActive, seconds, onComplete, hasCompleted, completed]);
+
+  const toggle = () => {
+    if (completed) return;
+    setIsActive(!isActive);
+  };
+  
+  const formatTime = (s) => {
+    const m = Math.floor(s / 60);
+    const rs = s % 60;
+    return `${m}:${rs < 10 ? '0' : ''}${rs}`;
+  };
+
+  if (!minutes || isNaN(parseInt(minutes))) return null;
+
+  return (
+    <div style={{ 
+      display: 'flex', 
+      alignItems: 'center', 
+      gap: '10px', 
+      marginTop: '5px'
+    }}>
+      <span style={{ 
+        fontFamily: 'monospace', 
+        fontSize: '1rem', 
+        color: completed ? 'var(--text-muted)' : 'var(--primary)', 
+        fontWeight: 'bold',
+        textDecoration: completed ? 'line-through' : 'none'
+      }}>
+        {completed ? "Done!" : formatTime(seconds)}
+      </span>
+      {!completed && (
+        <button 
+          onClick={(e) => { e.preventDefault(); toggle(); }} 
+          style={{ 
+            padding: '2px 8px', 
+            fontSize: '0.7rem', 
+            borderRadius: '4px',
+            border: 'none',
+            background: isActive ? '#ef4444' : 'var(--primary)',
+            color: 'white',
+            cursor: 'pointer'
+          }}
+        >
+          {isActive ? 'Pause' : 'Start'}
+        </button>
+      )}
+    </div>
+  );
+}
+
 function Dashboard({ goToUpload, activePlanId, setActivePlanId }) {
   const [tasks, setTasks] = useState([]);
   const [userData, setUserData] = useState(null);
@@ -44,10 +131,15 @@ function Dashboard({ goToUpload, activePlanId, setActivePlanId }) {
     }
   }
 
+  const [examDate, setExamDate] = useState(null);
+
   useEffect(() => {
     const uid = auth.currentUser?.uid;
     if (uid && activePlanId) {
-      getStudyPlan(uid, activePlanId).then(setTasks);
+      getStudyPlan(uid, activePlanId).then(data => {
+        setTasks(data?.tasks || []);
+        setExamDate(data?.examDate);
+      });
     }
   }, [activePlanId]);
 
@@ -222,9 +314,22 @@ function Dashboard({ goToUpload, activePlanId, setActivePlanId }) {
           </span>
         </div>
         
+        {todayString === examDate && (
+          <Card style={{ 
+            background: "linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%)", 
+            textAlign: "center",
+            padding: "20px",
+            color: "white",
+            marginBottom: "15px"
+          }}>
+            <h3 style={{ margin: "0 0 5px 0" }}>🎯 Exam Day!</h3>
+            <p style={{ fontSize: "0.9rem", fontWeight: "bold" }}>All the best! Write your exams well. 💪</p>
+          </Card>
+        )}
+
         {todayTasks.length === 0 ? (
           <Card>
-            <p>No tasks for today. Relax! ☕</p>
+            <p>{todayString === examDate ? "Go crush it! 🚀" : "No tasks for today. Relax! ☕"}</p>
           </Card>
         ) : (
           todayTasks.map((task, idx) => (
@@ -232,7 +337,11 @@ function Dashboard({ goToUpload, activePlanId, setActivePlanId }) {
               <p style={{ textDecoration: task.completed ? "line-through" : "none", opacity: task.completed ? 0.6 : 1 }}>
                 <strong>{task.topic}</strong>
               </p>
-              <p style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>{task.duration}</p>
+              <StudyTimer 
+                minutes={task.duration} 
+                onComplete={() => toggleTaskComplete(task, tasks, setTasks, activePlanId)}
+                completed={task.completed}
+              />
             </Card>
           ))
         )}

@@ -2,7 +2,7 @@ import React from "react";
 import Card from "../components/Card";
 import { uploadSyllabus } from "../api/api";
 import { auth } from "../firebase";
-import { differenceInDays, addDays, format } from "date-fns";
+import { differenceInCalendarDays, addDays, format } from "date-fns";
 import { saveStudyPlan } from "../api/firestore";
 
 function Upload({ 
@@ -21,7 +21,7 @@ function Upload({
 
     const today = new Date();
     const exam = new Date(examDate);
-    const totalDays = differenceInDays(exam, today);
+    const totalDays = differenceInCalendarDays(exam, today);
 
     if (totalDays < 3) {
       alert("Your exam is too close! Please select a date at least 3 days away.");
@@ -44,7 +44,7 @@ function Upload({
       }
 
       const tasks = [];
-      const studyDays = totalDays - 2;
+      const studyDays = totalDays - 1; // Only 1 day for revision
       // Map topics to study days using an Even Distribution algorithm
       // This ensures topics are spread across the entire study period
       // instead of being stacked at the beginning.
@@ -52,28 +52,34 @@ function Upload({
         // Calculate target day by spreading index across total studyDays
         const targetDay = Math.floor(index * studyDays / topics.length);
         const studyDate = addDays(today, targetDay);
+        const dateStr = format(studyDate, "yyyy-MM-dd");
 
+        // Study Session
         tasks.push({
-          date: format(studyDate, "yyyy-MM-dd"),
-          topic,
-          duration: "2 hours",
+          date: dateStr,
+          topic: `Study: ${topic}`,
+          duration: "90", // 1 hr 30 min
+          completed: false
+        });
+
+        // Rest Session
+        tasks.push({
+          date: dateStr,
+          topic: "Rest & Recharge ☕",
+          duration: "15", // 15 min
           completed: false
         });
       });
 
-      const revisionStart = addDays(today, studyDays);
       const examDayMinus1 = addDays(today, totalDays - 1);
-
-      [revisionStart, examDayMinus1].forEach(revDate => {
-        tasks.push({
-          date: format(revDate, "yyyy-MM-dd"),
-          topic: "Comprehensive Revision",
-          duration: "3 hours",
-          completed: false
-        });
+      tasks.push({
+        date: format(examDayMinus1, "yyyy-MM-dd"),
+        topic: "Comprehensive Revision",
+        duration: "180", // Default to 180 minutes
+        completed: false
       });
 
-      const planId = await saveStudyPlan(uid, tasks, syllabusName);
+      const planId = await saveStudyPlan(uid, tasks, syllabusName, examDate);
       setActivePlanId(planId);
       setStatus("Study plan created successfully!");
       

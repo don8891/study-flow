@@ -65,12 +65,13 @@ export async function getUserProfile(uid) {
 }
 
 /* Save study plan into sub-collection */
-export async function saveStudyPlan(uid, tasks, name) {
+export async function saveStudyPlan(uid, tasks, name, examDate) {
   const planId = name.replace(/\s+/g, '-').toLowerCase(); // Slugify name
   const ref = doc(db, "users", uid, "studyPlans", planId);
   await setDoc(ref, {
     name,
     tasks,
+    examDate,
     createdAt: new Date()
   });
   return planId;
@@ -78,10 +79,10 @@ export async function saveStudyPlan(uid, tasks, name) {
 
 /* Load specific study plan */
 export async function getStudyPlan(uid, planId) {
-  if (!planId) return [];
+  if (!planId) return null;
   const ref = doc(db, "users", uid, "studyPlans", planId);
   const snap = await getDoc(ref);
-  return snap.exists() ? snap.data().tasks : [];
+  return snap.exists() ? snap.data() : null;
 }
 
 /* Get all plans for a user */

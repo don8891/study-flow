@@ -6,14 +6,94 @@ import { auth } from "../firebase";
 import { getStudyPlan, recordActivity, updatePlanTasks } from "../api/firestore";
 import Card from "../components/Card";
 
+function StudyTimer({ minutes, onComplete, completed }) {
+  const [seconds, setSeconds] = useState(parseInt(minutes) * 60 || 0);
+  const [isActive, setIsActive] = useState(false);
+  const [hasCompleted, setHasCompleted] = useState(false);
+
+  useEffect(() => {
+    let interval = null;
+    if (isActive && seconds > 0) {
+      interval = setInterval(() => {
+        setSeconds((prev) => prev - 1);
+      }, 1000);
+    } else if (seconds === 0 && isActive && !hasCompleted && !completed) {
+      setHasCompleted(true);
+      setIsActive(false);
+      if (onComplete) onComplete();
+      clearInterval(interval);
+    } else {
+      clearInterval(interval);
+    }
+    return () => clearInterval(interval);
+  }, [isActive, seconds, onComplete, hasCompleted, completed]);
+
+  const toggle = () => {
+    if (completed) return;
+    setIsActive(!isActive);
+  };
+  
+  const formatTime = (s) => {
+    const m = Math.floor(s / 60);
+    const rs = s % 60;
+    return `${m}:${rs < 10 ? '0' : ''}${rs}`;
+  };
+
+  if (!minutes || isNaN(parseInt(minutes))) return null;
+
+  return (
+    <div style={{ 
+      display: 'flex', 
+      alignItems: 'center', 
+      gap: '15px', 
+      marginTop: '10px',
+      padding: '8px 12px',
+      background: 'rgba(255,255,255,0.05)',
+      borderRadius: '8px',
+      width: 'fit-content'
+    }}>
+      <span style={{ 
+        fontFamily: 'monospace', 
+        fontSize: '1.1rem', 
+        color: completed ? 'var(--text-muted)' : 'var(--primary)', 
+        fontWeight: 'bold',
+        textDecoration: completed ? 'line-through' : 'none'
+      }}>
+        {completed ? "Done!" : formatTime(seconds)}
+      </span>
+      {!completed && (
+        <button 
+          onClick={(e) => { e.preventDefault(); toggle(); }} 
+          style={{ 
+            padding: '4px 12px', 
+            fontSize: '0.8rem', 
+            borderRadius: '6px',
+            border: 'none',
+            background: isActive ? '#ef4444' : 'var(--primary)',
+            color: 'white',
+            cursor: 'pointer'
+          }}
+        >
+          {isActive ? 'Pause' : 'Start Timer'}
+        </button>
+      )}
+    </div>
+  );
+}
+
 function Planner({ activePlanId }) {
   const [tasks, setTasks] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
 
+  const [planData, setPlanData] = useState(null);
+
   useEffect(() => {
     const uid = auth.currentUser?.uid;
     if (uid && activePlanId) {
-      getStudyPlan(uid, activePlanId).then(setTasks);
+      getStudyPlan(uid, activePlanId).then(data => {
+        setPlanData(data);
+        setTasks(data?.tasks || []);
+      });
     }
   }, [activePlanId]);
 
@@ -63,19 +143,33 @@ function Planner({ activePlanId }) {
 
       <h3 style={{ marginBottom: '15px' }}>Tasks for {format(selectedDate, "PPP")}</h3>
 
+      {selectedDateString === planData?.examDate && (
+        <Card style={{ 
+          background: "linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%)", 
+          textAlign: "center",
+          padding: "30px",
+          color: "white",
+          marginBottom: "20px"
+        }}>
+          <h2 style={{ fontSize: "2rem", margin: "0 0 10px 0" }}>🎯 Exam Day!</h2>
+          <p style={{ fontSize: "1.2rem", fontWeight: "bold" }}>All the best! Write your exams well. You've got this! 💪</p>
+        </Card>
+      )}
+
       {tasksForDay.length === 0 ? (
         <Card>
-          <p>No tasks for this date.</p>
+          <p>{selectedDateString === planData?.examDate ? "No more tasks, just give your best!" : "No tasks for this date."}</p>
         </Card>
       ) : (
         tasksForDay.map((task, index) => (
-          <Card key={index}>
-            <label style={{ display: "flex", alignItems: "center", gap: "10px", cursor: 'pointer' }}>
+          <Card key={index} style={{ position: 'relative' }}>
+            <label style={{ display: "flex", alignItems: "center", gap: "10px", cursor: task.completed ? 'default' : 'pointer' }}>
               <input
                 type="checkbox"
                 checked={task.completed}
-                onChange={() => toggleTask(task)}
-                style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                readOnly={!task.completed}
+                onChange={() => task.completed && toggleTask(task)}
+                style={{ width: '18px', height: '18px', cursor: task.completed ? 'default' : 'pointer' }}
               />
               <span style={{
                 fontSize: '1.1rem',
@@ -86,7 +180,11 @@ function Planner({ activePlanId }) {
                 {task.topic}
               </span>
             </label>
-            <p style={{ marginLeft: '28px', fontSize: '0.9rem' }}>{task.duration}</p>
+            <StudyTimer 
+              minutes={task.duration} 
+              onComplete={() => toggleTask(task)} 
+              completed={task.completed}
+            />
           </Card>
         ))
       )}
