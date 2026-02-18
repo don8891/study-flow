@@ -10,7 +10,8 @@ function Upload({
   syllabusName, setSyllabusName,
   examDate, setExamDate, 
   status, setStatus, 
-  setPage, setActivePlanId 
+  setPage, setActivePlanId,
+  setSyllabusText
 }) {
   async function handleUpload() {
     if (!file || !examDate || !syllabusName.trim()) {
@@ -33,6 +34,7 @@ function Upload({
     const res = await uploadSyllabus(file, uid);
 
     if (res.success) {
+      setSyllabusText(res.text); // Save the extracted text for AI features
       const topics = res.topics;
 
       if (topics.length === 0) {

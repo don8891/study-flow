@@ -2,7 +2,9 @@ import { useState } from "react";
 import Dashboard from "./Dashboard";
 import Planner from "./Planner";
 import Profile from "./Profile";
-import Upload from "./Upload"; // Import Upload
+import Upload from "./Upload";
+import Quiz from "./Quiz";
+import AIAssistant from "./AIAssistant";
 import BottomNav from "../components/BottomNav";
 
 function Home({ onLogout }) {
@@ -14,6 +16,9 @@ function Home({ onLogout }) {
   const [syllabusName, setSyllabusName] = useState("");
   const [examDate, setExamDate] = useState("");
   const [uploadStatus, setUploadStatus] = useState("");
+  
+  // State for AI features
+  const [syllabusText, setSyllabusText] = useState("");
 
   function goToUpload() {
     setPage("upload");
@@ -40,9 +45,12 @@ function Home({ onLogout }) {
           setStatus={setUploadStatus}
           setPage={setPage}
           setActivePlanId={setActivePlanId}
+          setSyllabusText={setSyllabusText}
         />
       )}
       {page === "calendar" && <Planner activePlanId={activePlanId} />}
+      {page === "assistant" && <AIAssistant syllabusText={syllabusText} />}
+      {page === "quiz" && <Quiz syllabusText={syllabusText} />}
       {page === "profile" && <Profile onLogout={onLogout} />}
 
       <BottomNav page={page} setPage={setPage} />

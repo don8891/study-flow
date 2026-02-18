@@ -1,4 +1,4 @@
-import { LayoutDashboard, CalendarKey, User } from "./Icons";
+import { LayoutDashboard, CalendarKey, User, Brain, Sparkles } from "./Icons";
 
 function BottomNav({ page, setPage }) {
   return (
@@ -17,6 +17,22 @@ function BottomNav({ page, setPage }) {
       >
         <CalendarKey size={24} />
         <span>Plan</span>
+      </button>
+
+      <button
+        className={page === "assistant" ? "active" : ""}
+        onClick={() => setPage("assistant")}
+      >
+        <Sparkles size={24} />
+        <span>Assistant</span>
+      </button>
+
+      <button
+        className={page === "quiz" ? "active" : ""}
+        onClick={() => setPage("quiz")}
+      >
+        <Brain size={24} />
+        <span>Quiz</span>
       </button>
 
       <button

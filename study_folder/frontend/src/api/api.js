@@ -31,3 +31,13 @@ export async function uploadSyllabus(file, uid) {
 
   return res.json();
 }
+
+export async function callAI(task, content) {
+  const res = await fetch("http://127.0.0.1:5000/ai-assistant", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ task, content })
+  });
+
+  return res.json();
+}

@@ -128,3 +128,43 @@ export const GraduationCap = ({ size = 20, color = "currentColor", ...props }) =
     <path d="M6 12v5c3 3 9 3 12 0v-5" />
   </svg>
 );
+
+export const Brain = ({ size = 20, color = "currentColor", ...props }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .52 8.105V19a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-1a4 4 0 0 0 .52-8.105 4 4 0 0 0-2.527-5.77A3 3 0 1 0 12 5Z" />
+    <path d="M12 21V12" />
+    <path d="M9 12h6" />
+  </svg>
+);
+
+export const Sparkles = ({ size = 20, color = "currentColor", ...props }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+    <path d="m5 3 1 1" />
+    <path d="m19 3-1 1" />
+    <path d="m5 21 1-1" />
+    <path d="m19 21-1-1" />
+  </svg>
+);

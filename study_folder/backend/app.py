@@ -141,7 +141,56 @@ def upload_syllabus():
         ]
 
     print(f"DEBUG: Final topics count: {len(topics)}")
-    return jsonify({"success": True, "topics": topics})
+    return jsonify({"success": True, "topics": topics, "text": cleaned_text})
+
+@app.route("/ai-assistant", methods=["POST"])
+def ai_assistant():
+    data = request.json
+    task = data.get("task")  # summary, quiz, doubt
+    content = data.get("content")
+
+    if task == "summary":
+        prompt = f"""
+        Summarize the following syllabus clearly in structured bullet points:
+
+        {content[:3000]}
+        """
+
+    elif task == "quiz":
+        prompt = f"""
+        Generate 5 multiple choice questions from this syllabus.
+
+        Requirements:
+        - 4 options (A, B, C, D)
+        - Provide correct answer
+        - Return JSON format only
+
+        {content[:3000]}
+        """
+
+    elif task == "doubt":
+        prompt = f"""
+        Explain clearly and simply:
+
+        {content}
+        """
+
+    else:
+        return {"success": False, "message": "Invalid task"}
+
+    response = requests.post(
+        "http://localhost:11434/api/generate",
+        json={
+            "model": "llama3",
+            "prompt": prompt,
+            "stream": False
+        }
+    )
+
+    result = response.json()
+    output = result.get("response", "")
+
+    return {"success": True, "response": output}
 
 if __name__ == "__main__":
     app.run(debug=True)
