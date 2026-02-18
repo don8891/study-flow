@@ -92,40 +92,60 @@ function Upload({
   }
 
   return (
-    <div className="page">
-      <h2>Generate Study Plan</h2>
+    <div className="page" style={{ maxWidth: '600px', margin: '0 auto' }}>
+      <h1 style={{ color: "var(--primary)", marginBottom: "30px" }}>Create Study Plan</h1>
 
-      <Card title="Syllabus Name">
-        <input
-          type="text"
-          placeholder="e.g. Physics 101, Final Exam"
-          value={syllabusName}
-          onChange={(e) => setSyllabusName(e.target.value)}
-        />
+      <Card title="Plan Name">
+        <div className="input-group">
+          <input
+            type="text"
+            placeholder="e.g., Final Exams Preparations"
+            value={syllabusName}
+            onChange={(e) => setSyllabusName(e.target.value)}
+          />
+        </div>
       </Card>
 
-      <Card title="Upload Content">
-        <input
-          type="file"
-          accept=".pdf,image/*"
-          onChange={(e) => setFile(e.target.files[0])}
-        />
-        {file && <p style={{ fontSize: '0.8rem', marginTop: '5px', color: 'var(--primary)' }}>Selected: {file.name}</p>}
+      <Card title="Upload Syllabus">
+        <p style={{ marginBottom: "15px", fontSize: "0.9rem" }}>Upload your syllabus in PDF or Image format.</p>
+        <div className="input-group">
+          <input
+            type="file"
+            accept=".pdf,image/*"
+            style={{ padding: "10px" }}
+            onChange={(e) => setFile(e.target.files[0])}
+          />
+        </div>
+        {file && <p style={{ fontSize: '0.8rem', marginTop: '10px', color: 'var(--primary)', fontWeight: 'bold' }}>Selected: {file.name}</p>}
       </Card>
 
-      <Card title="Exam Date">
-        <input
-          type="date"
-          value={examDate}
-          onChange={(e) => setExamDate(e.target.value)}
-        />
+      <Card title="Target Exam Date">
+        <div className="input-group">
+          <input
+            type="date"
+            value={examDate}
+            onChange={(e) => setExamDate(e.target.value)}
+          />
+        </div>
       </Card>
 
-      <button onClick={handleUpload} className="btn-sm">
-        Generate Plan
+      <button onClick={handleUpload} style={{ width: "100%", padding: "16px", fontSize: "1.1rem" }}>
+        Generate My Intelligent Plan
       </button>
 
-      {status && <p style={{ marginTop: '15px' }}>{status}</p>}
+      {status && (
+        <div style={{ 
+          marginTop: "20px", 
+          padding: "15px", 
+          background: "var(--primary-light)", 
+          borderRadius: "12px",
+          color: "var(--primary)",
+          textAlign: "center",
+          fontWeight: "bold"
+        }}>
+          {status}
+        </div>
+      )}
     </div>
   );
 }

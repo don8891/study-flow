@@ -128,66 +128,92 @@ function Planner({ activePlanId }) {
 
   return (
     <div className="page" style={{ paddingBottom: '80px' }}>
-      <h2>Study Planner</h2>
+      <h1 style={{ color: "var(--primary)", marginBottom: "30px" }}>Study Planner</h1>
 
-      <div className="calendar-center" style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
-        <Calendar
-          onChange={setSelectedDate}
-          value={selectedDate}
-          tileClassName={({ date }) => {
-            const dateString = format(date, "yyyy-MM-dd");
-            return groupedTasks[dateString] ? "highlight" : null;
-          }}
-        />
-      </div>
-
-      <h3 style={{ marginBottom: '15px' }}>Tasks for {format(selectedDate, "PPP")}</h3>
-
-      {selectedDateString === planData?.examDate && (
-        <Card style={{ 
-          background: "linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%)", 
-          textAlign: "center",
-          padding: "30px",
-          color: "white",
-          marginBottom: "20px"
-        }}>
-          <h2 style={{ fontSize: "2rem", margin: "0 0 10px 0" }}>🎯 Exam Day!</h2>
-          <p style={{ fontSize: "1.2rem", fontWeight: "bold" }}>All the best! Write your exams well. You've got this! 💪</p>
-        </Card>
-      )}
-
-      {tasksForDay.length === 0 ? (
-        <Card>
-          <p>{selectedDateString === planData?.examDate ? "No more tasks, just give your best!" : "No tasks for this date."}</p>
-        </Card>
-      ) : (
-        tasksForDay.map((task, index) => (
-          <Card key={index} style={{ position: 'relative' }}>
-            <label style={{ display: "flex", alignItems: "center", gap: "10px", cursor: task.completed ? 'default' : 'pointer' }}>
-              <input
-                type="checkbox"
-                checked={task.completed}
-                readOnly={!task.completed}
-                onChange={() => task.completed && toggleTask(task)}
-                style={{ width: '18px', height: '18px', cursor: task.completed ? 'default' : 'pointer' }}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1.5fr", gap: "24px" }}>
+        {/* Calendar Side */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+          <Card title="Calendar">
+            <div className="calendar-center">
+              <Calendar
+                onChange={setSelectedDate}
+                value={selectedDate}
+                className="custom-calendar"
+                tileClassName={({ date }) => {
+                  const dateString = format(date, "yyyy-MM-dd");
+                  if (dateString === planData?.examDate) return "exam-tile";
+                  return groupedTasks[dateString] ? "study-tile" : null;
+                }}
               />
-              <span style={{
-                fontSize: '1.1rem',
-                fontWeight: 'bold',
-                textDecoration: task.completed ? "line-through" : "none",
-                color: task.completed ? "var(--text-muted)" : "var(--text-main)"
-              }}>
-                {task.topic}
-              </span>
-            </label>
-            <StudyTimer 
-              minutes={task.duration} 
-              onComplete={() => toggleTask(task)} 
-              completed={task.completed}
-            />
+            </div>
           </Card>
-        ))
-      )}
+        </div>
+
+        {/* Tasks Side */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+          <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <h3 style={{ margin: 0 }}>Tasks for {format(selectedDate, "PPP")}</h3>
+          </header>
+
+          {selectedDateString === planData?.examDate && (
+            <div style={{ 
+              background: "linear-gradient(135deg, var(--primary), var(--accent))", 
+              textAlign: "center",
+              padding: "40px 24px",
+              color: "white",
+              borderRadius: "24px",
+              boxShadow: "0 12px 32px rgba(17, 94, 89, 0.2)",
+              position: "relative",
+              overflow: "hidden"
+            }}>
+              <h2 style={{ fontSize: "2.5rem", margin: "0 0 10px 0" }}>🎯</h2>
+              <h3 style={{ fontSize: "1.5rem", margin: "0 0 8px 0" }}>Exam Day!</h3>
+              <p style={{ fontSize: "1rem", fontWeight: "bold", opacity: 0.9 }}>All the best! Write your exams well. 💪</p>
+            </div>
+          )}
+
+          {tasksForDay.length === 0 ? (
+            <Card>
+              <p style={{ textAlign: "center", color: "var(--text-muted)" }}>
+                {selectedDateString === planData?.examDate 
+                  ? "Your hard work pays off today! Go crush it! 🚀" 
+                  : "No tasks scheduled for this day. Enjoy your break! ☕"}
+              </p>
+            </Card>
+          ) : (
+            tasksForDay.map((task, index) => (
+              <Card key={index} className="card-hover">
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    <div style={{ 
+                      width: "12px", 
+                      height: "12px", 
+                      borderRadius: "50%", 
+                      background: task.completed ? "var(--success)" : "var(--accent)" 
+                    }} />
+                    <span style={{
+                      fontSize: '1.1rem',
+                      fontWeight: "600",
+                      textDecoration: task.completed ? "line-through" : "none",
+                      color: task.completed ? "var(--text-muted)" : "var(--text-main)"
+                    }}>
+                      {task.topic}
+                    </span>
+                  </div>
+                  {task.completed && <span style={{ color: "var(--success)", fontWeight: "bold", fontSize: "0.8rem" }}>DONE</span>}
+                </div>
+                <div style={{ marginTop: "16px", padding: "12px", background: "var(--primary-light)", borderRadius: "12px" }}>
+                  <StudyTimer 
+                    minutes={task.duration} 
+                    onComplete={() => toggleTask(task)} 
+                    completed={task.completed}
+                  />
+                </div>
+              </Card>
+            ))
+          )}
+        </div>
+      </div>
     </div>
   );
 }

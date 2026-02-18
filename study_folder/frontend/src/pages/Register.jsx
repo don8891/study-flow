@@ -20,27 +20,37 @@ function Register({ onRegister, goToLogin }) {
 
   return (
     <AuthLayout>
-      <h2>Register</h2>
+      <h2 style={{ color: 'var(--primary)', marginBottom: '30px' }}>Join Study Flow</h2>
 
-      <input
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
+      <div className="input-group">
+        <input
+          placeholder="Email Address"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+      </div>
 
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
+      <div className="input-group">
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+      </div>
 
-      <button onClick={handleRegister}>Create Account</button>
+      <button style={{ width: '100%', marginTop: '10px' }} onClick={handleRegister}>
+        Get Started
+      </button>
 
-      <p>
-        Already have an account?
-        <br />
-        <button onClick={goToLogin}>Login</button>
+      <p style={{ marginTop: '20px', fontSize: '0.9rem' }}>
+        Already have an account?{" "}
+        <span 
+          onClick={goToLogin} 
+          style={{ color: 'var(--accent)', cursor: 'pointer', fontWeight: 'bold' }}
+        >
+          Login here
+        </span>
       </p>
     </AuthLayout>
   );

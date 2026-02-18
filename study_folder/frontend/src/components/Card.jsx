@@ -1,7 +1,7 @@
-function Card({ title, children }) {
+function Card({ title, children, className = "" }) {
   return (
-    <div className="card glass-card">
-      {title && <h3>{title}</h3>}
+    <div className={`glass-card ${className}`}>
+      {title && <h3 style={{ marginBottom: '20px', color: 'var(--primary)' }}>{title}</h3>}
       {children}
     </div>
   );

@@ -25,35 +25,37 @@ function Home({ onLogout }) {
   }
 
   return (
-    <div style={{ paddingBottom: "80px" }}>
-      {page === "home" && (
-        <Dashboard 
-          goToUpload={goToUpload} 
-          activePlanId={activePlanId} 
-          setActivePlanId={setActivePlanId} 
-        />
-      )}
-      {page === "upload" && (
-        <Upload 
-          file={uploadFile} 
-          setFile={setUploadFile}
-          syllabusName={syllabusName}
-          setSyllabusName={setSyllabusName}
-          examDate={examDate}
-          setExamDate={setExamDate}
-          status={uploadStatus}
-          setStatus={setUploadStatus}
-          setPage={setPage}
-          setActivePlanId={setActivePlanId}
-          setSyllabusText={setSyllabusText}
-        />
-      )}
-      {page === "calendar" && <Planner activePlanId={activePlanId} />}
-      {page === "assistant" && <AIAssistant syllabusText={syllabusText} />}
-      {page === "quiz" && <Quiz syllabusText={syllabusText} />}
-      {page === "profile" && <Profile onLogout={onLogout} />}
-
-      <BottomNav page={page} setPage={setPage} />
+    <div className="app-container">
+      <BottomNav page={page} setPage={setPage} onLogout={onLogout} />
+      
+      <main className="main-content">
+        {page === "home" && (
+          <Dashboard 
+            goToUpload={goToUpload} 
+            activePlanId={activePlanId} 
+            setActivePlanId={setActivePlanId} 
+          />
+        )}
+        {page === "upload" && (
+          <Upload 
+            file={uploadFile} 
+            setFile={setUploadFile}
+            syllabusName={syllabusName}
+            setSyllabusName={setSyllabusName}
+            examDate={examDate}
+            setExamDate={setExamDate}
+            status={uploadStatus}
+            setStatus={setUploadStatus}
+            setPage={setPage}
+            setActivePlanId={setActivePlanId}
+            setSyllabusText={setSyllabusText}
+          />
+        )}
+        {page === "calendar" && <Planner activePlanId={activePlanId} />}
+        {page === "assistant" && <AIAssistant syllabusText={syllabusText} />}
+        {page === "quiz" && <Quiz syllabusText={syllabusText} />}
+        {page === "profile" && <Profile onLogout={onLogout} />}
+      </main>
     </div>
   );
 }

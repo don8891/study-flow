@@ -170,51 +170,50 @@ function Dashboard({ goToUpload, activePlanId, setActivePlanId }) {
 
   return (
     <div className="page" style={{ paddingBottom: '100px' }}>
-      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "30px" }}>
-        <div style={{ flex: 1 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px" }}>
-            <h2 style={{ margin: 0 }}>Study Context</h2>
-            <button onClick={goToUpload} className="btn-sm" style={{ padding: "8px 15px", fontSize: "0.8rem" }}>
-              + New Plan
-            </button>
-          </div>
-          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+      <header style={{ marginBottom: "30px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <p style={{ margin: 0, fontSize: "0.9rem", color: "var(--text-muted)" }}>Welcome back, Study Master! 👋</p>
+          <h1 style={{ margin: 0, color: "var(--primary)" }}>Dashboard</h1>
+        </div>
+        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+          <div style={{ position: "relative", display: "flex", alignItems: "center", gap: "8px" }}>
             <select 
               value={activePlanId || ""} 
               onChange={(e) => setActivePlanId(e.target.value)}
               style={{
-                background: "rgba(30, 41, 59, 0.8)",
-                color: "var(--text-main)",
+                background: "white",
                 border: "1px solid var(--border)",
-                padding: "8px 12px",
-                borderRadius: "10px",
-                outline: "none",
-                cursor: "pointer",
+                padding: "8px 36px 8px 16px",
+                borderRadius: "12px",
                 fontSize: "0.9rem",
-                flex: 1,
-                maxWidth: "220px"
+                outline: "none",
+                appearance: "none",
+                cursor: "pointer"
               }}
             >
-              {plans.length === 0 && <option value="">No Plans Found</option>}
-              {plans.map(p => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
+              {plans.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
             {plans.length > 0 && (
               <button 
-                onClick={handleDelete} 
-                className="btn-danger btn-sm"
-                style={{ padding: "8px", width: "36px", height: "36px", display: "flex", alignItems: "center", justifyContent: "center" }}
+                onClick={handleDelete}
+                style={{
+                  background: "var(--primary-light)",
+                  color: "var(--primary)",
+                  border: "none",
+                  borderRadius: "8px",
+                  padding: "8px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer"
+                }}
                 title="Delete Plan"
               >
                 🗑️
               </button>
             )}
           </div>
-        </div>
-        <div style={{ textAlign: "right", marginLeft: "15px" }}>
-          <div style={{ fontSize: "1.5rem" }}>{level.icon}</div>
-          <span style={{ fontSize: "0.7rem", fontWeight: "bold", textTransform: "uppercase", color: level.color }}>{level.title}</span>
+          <button onClick={goToUpload} className="btn-sm">+ New Plan</button>
         </div>
       </header>
 
@@ -224,129 +223,158 @@ function Dashboard({ goToUpload, activePlanId, setActivePlanId }) {
           <button onClick={goToUpload} className="btn-sm">Create My First Plan</button>
         </Card>
       ) : (
-        <>
-          {/* Main Stats Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '20px', marginBottom: '30px' }}>
-        <Card className="card-hover">
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <span className="streak-icon" style={{ fontSize: "1.5rem" }}>🔥</span>
-            <div>
-              <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--text-muted)" }}>Current Streak</p>
-              <h3 style={{ margin: 0 }}>{streak} Days</h3>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="card-hover">
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <span style={{ fontSize: "1.5rem" }}>✨</span>
-            <div>
-              <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--text-muted)" }}>Total XP</p>
-              <h3 style={{ margin: 0 }}>{xp}</h3>
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      {/* Level Card */}
-      <Card style={{ marginBottom: "30px", borderLeft: `4px solid ${level.color}` }} className="card-hover">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-          <h4 style={{ margin: 0 }}>Level Progress</h4>
-          <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
-            {xp} / {level.next} XP
-          </span>
-        </div>
-        <div style={{ height: "12px", background: "rgba(255,255,255,0.05)", borderRadius: "10px", overflow: "hidden" }} className="level-shimmer">
-          <div style={{ 
-            width: `${levelProgress}%`, 
-            height: "100%", 
-            background: `linear-gradient(90deg, ${level.color}, #ffffff)`, 
-            transition: "width 1s ease-out" 
-          }} />
-        </div>
-      </Card>
-
-      {/* Badges Section */}
-      <div style={{ marginBottom: "30px" }}>
-        <h3 style={{ marginBottom: "15px" }}>Badges Earned</h3>
         <div style={{ 
-          display: "flex", 
-          gap: "15px", 
-          overflowX: "auto", 
-          paddingBottom: "10px",
-          scrollbarWidth: "none" 
+          display: "grid", 
+          gridTemplateColumns: "1.5fr 1fr", 
+          gap: "24px",
+          alignItems: "start"
         }}>
-          {completedLessons > 0 && (
-            <div className="badge-item badge-unlock" style={{ minWidth: "80px", textAlign: "center" }}>
-              <div style={{ fontSize: "2rem", marginBottom: "5px", filter: "drop-shadow(0 0 10px rgba(56,189,248,0.5))" }}>🚀</div>
-              <p style={{ fontSize: "0.6rem", margin: 0 }}>First Flight</p>
-            </div>
-          )}
-          {streak >= 3 && (
-            <div className="badge-item badge-unlock" style={{ minWidth: "80px", textAlign: "center" }}>
-              <div style={{ fontSize: "2rem", marginBottom: "5px", filter: "drop-shadow(0 0 10px rgba(239,68,68,0.5))" }}>⚡</div>
-              <p style={{ fontSize: "0.6rem", margin: 0 }}>Streak Starter</p>
-            </div>
-          )}
-          {completedLessons >= totalLessons / 2 && totalLessons > 0 && (
-            <div className="badge-item badge-unlock" style={{ minWidth: "80px", textAlign: "center" }}>
-              <div style={{ fontSize: "2rem", marginBottom: "5px", filter: "drop-shadow(0 0 10px rgba(245,158,11,0.5))" }}>🏅</div>
-              <p style={{ fontSize: "0.6rem", margin: 0 }}>Halfway Hero</p>
-            </div>
-          )}
-          {completedLessons === totalLessons && totalLessons > 0 && (
-            <div className="badge-item badge-unlock" style={{ minWidth: "80px", textAlign: "center" }}>
-              <div style={{ fontSize: "2rem", marginBottom: "5px", filter: "drop-shadow(0 0 10px rgba(16,185,129,0.5))" }}>💎</div>
-              <p style={{ fontSize: "0.6rem", margin: 0 }}>Elite Master</p>
-            </div>
-          )}
-          {completedLessons === 0 && (
-            <p style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Unlock your first badge by completing a task!</p>
-          )}
-        </div>
-      </div>
-
-      <div style={{ marginTop: "20px" }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-          <h3>Today's Mission</h3>
-          <span style={{ fontSize: '0.8rem', color: '#38bdf8', background: "rgba(56,189,248,0.1)", padding: "4px 10px", borderRadius: "15px" }}>
-            {completedToday}/{todayTasks.length} Secured
-          </span>
-        </div>
-        
-        {todayString === examDate && (
-          <Card style={{ 
-            background: "linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%)", 
-            textAlign: "center",
-            padding: "20px",
-            color: "white",
-            marginBottom: "15px"
-          }}>
-            <h3 style={{ margin: "0 0 5px 0" }}>🎯 Exam Day!</h3>
-            <p style={{ fontSize: "0.9rem", fontWeight: "bold" }}>All the best! Write your exams well. 💪</p>
-          </Card>
-        )}
-
-        {todayTasks.length === 0 ? (
-          <Card>
-            <p>{todayString === examDate ? "Go crush it! 🚀" : "No tasks for today. Relax! ☕"}</p>
-          </Card>
-        ) : (
-          todayTasks.map((task, idx) => (
-            <Card key={idx} style={{ marginBottom: "10px" }}>
-              <p style={{ textDecoration: task.completed ? "line-through" : "none", opacity: task.completed ? 0.6 : 1 }}>
-                <strong>{task.topic}</strong>
-              </p>
-              <StudyTimer 
-                minutes={task.duration} 
-                onComplete={() => toggleTaskComplete(task, tasks, setTasks, activePlanId)}
-                completed={task.completed}
-              />
+          {/* Left Column: Next Session & Topic List */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+            {/* Next Session Widget */}
+            <Card title="Next Session">
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                {todayTasks.filter(t => !t.completed).length > 0 ? (
+                  <div style={{ width: "100%" }}>
+                    <h2 style={{ fontSize: "1.2rem", margin: "0 0 16px 0" }}>
+                      {todayTasks.filter(t => !t.completed)[0].topic}
+                    </h2>
+                    <div style={{ 
+                      background: "var(--primary-light)", 
+                      padding: "20px", 
+                      borderRadius: "16px",
+                      display: "flex",
+                      justifyContent: "center"
+                    }}>
+                      <StudyTimer 
+                        minutes={todayTasks.filter(t => !t.completed)[0].duration} 
+                        onComplete={() => toggleTaskComplete(todayTasks.filter(t => !t.completed)[0], tasks, setTasks, activePlanId)}
+                        completed={false}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <p>All sessions complete! 🚀</p>
+                )}
+              </div>
             </Card>
-          ))
-        )}
-      </div>
-        </>
+
+            {/* Today's Mission / Standings Style */}
+            <Card title="Today's Mission">
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                {todayTasks.length === 0 ? (
+                  <p>No tasks for today. Relax! ☕</p>
+                ) : (
+                  todayTasks.map((task, idx) => (
+                    <div key={idx} style={{ 
+                      display: "flex", 
+                      justifyContent: "space-between", 
+                      alignItems: "center",
+                      padding: "12px 16px",
+                      background: task.completed ? "var(--primary-light)" : "rgba(255,255,255,0.5)",
+                      borderRadius: "12px",
+                      border: "1px solid var(--border)"
+                    }}>
+                      <span style={{ 
+                        fontWeight: "500", 
+                        textDecoration: task.completed ? "line-through" : "none",
+                        color: task.completed ? "var(--text-muted)" : "var(--text-main)"
+                      }}>
+                        {task.topic}
+                      </span>
+                      {task.completed ? (
+                        <span style={{ color: "var(--success)", fontSize: "0.8rem", fontWeight: "bold" }}>COMPLETED</span>
+                      ) : (
+                        <span style={{ color: "var(--accent)", fontSize: "0.8rem" }}>Pending</span>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </Card>
+          </div>
+
+          {/* Right Column: Statistics & Badges */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+            {/* General Statistics */}
+            <Card title="Study Statistics">
+              <div style={{ marginBottom: "20px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                  <span style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>Course Progress</span>
+                  <span style={{ fontSize: "0.85rem", fontWeight: "bold" }}>{Math.round(levelProgress)}%</span>
+                </div>
+                <div style={{ height: "8px", background: "var(--primary-light)", borderRadius: "10px", overflow: "hidden" }}>
+                  <div style={{ width: `${levelProgress}%`, height: "100%", background: "var(--primary)", transition: "width 0.5s" }} />
+                </div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                <div style={{ background: "white", padding: "16px", borderRadius: "16px", border: "1px solid var(--border)" }}>
+                  <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--text-muted)" }}>XP EARNED</p>
+                  <h3 style={{ margin: "4px 0 0 0" }}>{xp}</h3>
+                </div>
+                <div style={{ background: "white", padding: "16px", borderRadius: "16px", border: "1px solid var(--border)" }}>
+                  <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--text-muted)" }}>STREAK</p>
+                  <h3 style={{ margin: "4px 0 0 0" }}>{streak}d</h3>
+                </div>
+              </div>
+            </Card>
+
+            {/* Badges Widget */}
+            <Card title="Earned Badges">
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px" }}>
+                {[
+                  { icon: "🚀", show: completedLessons > 0 },
+                  { icon: "⚡", show: streak >= 3 },
+                  { icon: "🏅", show: completedLessons >= totalLessons / 2 },
+                  { icon: "💎", show: completedLessons === totalLessons && totalLessons > 0 }
+                ].map((b, i) => (
+                  <div key={i} style={{ 
+                    fontSize: "1.5rem", 
+                    opacity: b.show ? 1 : 0.2, 
+                    filter: b.show ? "none" : "grayscale(100%)",
+                    textAlign: "center",
+                    background: "white",
+                    padding: "8px",
+                    borderRadius: "12px",
+                    border: "1px solid var(--border)"
+                  }}>
+                    {b.icon}
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            {/* AI Promot Banner */}
+            <div style={{ 
+              background: "linear-gradient(135deg, var(--primary), var(--accent))",
+              borderRadius: "24px",
+              padding: "24px",
+              color: "white",
+              position: "relative",
+              overflow: "hidden"
+            }}>
+              <div style={{ position: "relative", zIndex: 1 }}>
+                <h3 style={{ margin: "0 0 8px 0" }}>Need help?</h3>
+                <p style={{ color: "rgba(255,255,255,0.9)", fontSize: "0.85rem", marginBottom: "16px" }}>
+                  Ask the AI assistant to clear your doubts or generate a quiz!
+                </p>
+                <button 
+                  onClick={() => setPage("assistant")}
+                  style={{ background: "white", color: "var(--primary)", boxShadow: "none" }}
+                >
+                  Start Chat
+                </button>
+              </div>
+              <div style={{ 
+                position: "absolute", 
+                right: "-20px", 
+                bottom: "-20px", 
+                fontSize: "5rem", 
+                opacity: 0.2 
+              }}>🤖</div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
