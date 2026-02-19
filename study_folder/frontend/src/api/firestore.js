@@ -12,9 +12,10 @@ import {
 } from "firebase/firestore";
 
 /* Create user profile */
-export async function createUserProfile(user) {
+export async function createUserProfile(user, username) {
   await setDoc(doc(db, "users", user.uid), {
     email: user.email,
+    username: username || "",
     streak: 0,
     maxStreak: 0,
     badges: [],
@@ -22,6 +23,12 @@ export async function createUserProfile(user) {
     totalXp: 0,
     createdAt: new Date()
   });
+}
+
+/* Update username */
+export async function updateUsername(uid, username) {
+  const ref = doc(db, "users", uid);
+  await setDoc(ref, { username }, { merge: true });
 }
 
 /* Update user activity and streak */
@@ -53,7 +60,19 @@ export async function recordActivity(uid) {
   await updateDoc(ref, {
     lastActivityDate: today,
     streak: newStreak,
-    maxStreak: Math.max(newStreak, data.maxStreak || 0)
+    maxStreak: Math.max(newStreak, data.maxStreak || 0),
+    totalXp: (data.totalXp || 0) + 10 // Increment XP whenever activity is recorded
+  });
+}
+
+/* Increment XP directly */
+export async function incrementXp(uid, amount) {
+  const ref = doc(db, "users", uid);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return;
+  const data = snap.data();
+  await updateDoc(ref, {
+    totalXp: (data.totalXp || 0) + amount
   });
 }
 

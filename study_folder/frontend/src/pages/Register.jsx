@@ -7,11 +7,12 @@ import { createUserProfile } from "../api/firestore";
 function Register({ onRegister, goToLogin }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
 
   async function handleRegister() {
     try {
       await registerUser(email, password);
-      await createUserProfile(auth.currentUser);
+      await createUserProfile(auth.currentUser, username);
       onRegister();
     } catch (err) {
       alert(err.message);
@@ -21,6 +22,14 @@ function Register({ onRegister, goToLogin }) {
   return (
     <AuthLayout>
       <h2 style={{ color: 'var(--primary)', marginBottom: '30px' }}>Join Study Flow</h2>
+
+      <div className="input-group">
+        <input
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
+      </div>
 
       <div className="input-group">
         <input

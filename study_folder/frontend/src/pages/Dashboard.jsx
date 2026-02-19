@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { auth } from "../firebase";
-import { getStudyPlan, getUserProfile, getStudyPlansList, deleteStudyPlan } from "../api/firestore";
+import { getStudyPlan, getUserProfile, getStudyPlansList, deleteStudyPlan, updatePlanTasks, recordActivity } from "../api/firestore";
 import Card from "../components/Card";
 
 async function toggleTaskComplete(task, tasks, setTasks, activePlanId) {
@@ -16,6 +16,7 @@ async function toggleTaskComplete(task, tasks, setTasks, activePlanId) {
   const uid = auth.currentUser?.uid;
   if (uid && activePlanId) {
     await updatePlanTasks(uid, activePlanId, updatedTasks);
+    // XP and Streak are handled within recordActivity (which now increments XP by 10)
     await recordActivity(uid);
   }
 }
@@ -91,7 +92,7 @@ function StudyTimer({ minutes, onComplete, completed }) {
   );
 }
 
-function Dashboard({ goToUpload, activePlanId, setActivePlanId }) {
+function Dashboard({ goToUpload, activePlanId, setActivePlanId, setPage }) {
   const [tasks, setTasks] = useState([]);
   const [userData, setUserData] = useState(null);
   const [plans, setPlans] = useState([]);
@@ -100,7 +101,20 @@ function Dashboard({ goToUpload, activePlanId, setActivePlanId }) {
     fetchPlans();
     const uid = auth.currentUser?.uid;
     if (uid) {
-      getUserProfile(uid).then(setUserData);
+      getUserProfile(uid).then(data => {
+        if (data) {
+          setUserData(data);
+        } else {
+          setUserData({
+            username: "",
+            streak: 0,
+            maxStreak: 0,
+            totalXp: 0
+          });
+        }
+      }).catch(err => {
+        console.error("Error fetching user profile:", err);
+      });
     }
   }, [activePlanId]);
 
@@ -172,7 +186,9 @@ function Dashboard({ goToUpload, activePlanId, setActivePlanId }) {
     <div className="page" style={{ paddingBottom: '100px' }}>
       <header style={{ marginBottom: "30px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
-          <p style={{ margin: 0, fontSize: "0.9rem", color: "var(--text-muted)" }}>Welcome back, Study Master! 👋</p>
+          <p style={{ margin: 0, fontSize: "0.9rem", color: "var(--text-muted)" }}>
+            Welcome back, {userData?.username || "Study Master"}! 👋
+          </p>
           <h1 style={{ margin: 0, color: "var(--primary)" }}>Dashboard</h1>
         </div>
         <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>

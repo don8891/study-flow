@@ -34,6 +34,7 @@ function Home({ onLogout }) {
             goToUpload={goToUpload} 
             activePlanId={activePlanId} 
             setActivePlanId={setActivePlanId} 
+            setPage={setPage}
           />
         )}
         {page === "upload" && (
