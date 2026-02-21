@@ -74,7 +74,7 @@ function PomodoroTimer({ topic, duration, onComplete, completed }) {
           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>
             {isBreak ? (topic.includes("Long") ? "Long Break" : "Short Break") : "Focus Time"}
           </span>
-          {!completed && (
+          {!completed && !isActive && (
             <button 
               onClick={(e) => { e.preventDefault(); toggle(); }} 
               style={{ 
@@ -82,14 +82,19 @@ function PomodoroTimer({ topic, duration, onComplete, completed }) {
                 fontSize: '0.8rem', 
                 borderRadius: '8px',
                 border: 'none',
-                background: isActive ? '#ef4444' : 'var(--primary)',
+                background: 'var(--primary)',
                 color: 'white',
                 cursor: 'pointer',
                 fontWeight: '600'
               }}
             >
-              {isActive ? 'Pause' : 'Start'}
+              Start
             </button>
+          )}
+          {isActive && (
+            <span style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 'bold' }}>
+              Focusing...
+            </span>
           )}
         </div>
       </div>
