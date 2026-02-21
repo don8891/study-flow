@@ -8,7 +8,7 @@ import Card from "../components/Card";
 import PomodoroTimer from "../components/PomodoroTimer";
 
 
-function Planner({ activePlanId }) {
+function Planner({ activePlanId, activeTimerId, setActiveTimerId }) {
   const [tasks, setTasks] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
 
@@ -135,6 +135,9 @@ function Planner({ activePlanId }) {
                     duration={task.duration}
                     onComplete={() => toggleTask(task)} 
                     completed={task.completed}
+                    timerId={`${task.date}-${task.topic}`}
+                    activeTimerId={activeTimerId}
+                    setActiveTimerId={setActiveTimerId}
                   />
                 </div>
               </Card>

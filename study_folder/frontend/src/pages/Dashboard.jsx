@@ -23,7 +23,7 @@ async function toggleTaskComplete(task, tasks, setTasks, activePlanId) {
 }
 
 
-function Dashboard({ goToUpload, activePlanId, setActivePlanId, setPage }) {
+function Dashboard({ goToUpload, activePlanId, setActivePlanId, setPage, activeTimerId, setActiveTimerId }) {
   const [tasks, setTasks] = useState([]);
   const [userData, setUserData] = useState(null);
   const [plans, setPlans] = useState([]);
@@ -198,6 +198,9 @@ function Dashboard({ goToUpload, activePlanId, setActivePlanId, setPage }) {
                         duration={todayTasks.filter(t => !t.completed)[0].duration}
                         onComplete={() => toggleTaskComplete(todayTasks.filter(t => !t.completed)[0], tasks, setTasks, activePlanId)}
                         completed={false}
+                        timerId={`${todayTasks.filter(t => !t.completed)[0].date}-${todayTasks.filter(t => !t.completed)[0].topic}`}
+                        activeTimerId={activeTimerId}
+                        setActiveTimerId={setActiveTimerId}
                       />
                     </div>
                   </div>

@@ -20,6 +20,9 @@ function Home({ onLogout }) {
   // State for AI features
   const [syllabusText, setSyllabusText] = useState("");
 
+  // Global state to track running timer (Singleton pattern)
+  const [activeTimerId, setActiveTimerId] = useState(null); 
+
   function goToUpload() {
     setPage("upload");
   }
@@ -35,6 +38,8 @@ function Home({ onLogout }) {
             activePlanId={activePlanId} 
             setActivePlanId={setActivePlanId} 
             setPage={setPage}
+            activeTimerId={activeTimerId}
+            setActiveTimerId={setActiveTimerId}
           />
         )}
         {page === "upload" && (
@@ -52,7 +57,13 @@ function Home({ onLogout }) {
             setSyllabusText={setSyllabusText}
           />
         )}
-        {page === "calendar" && <Planner activePlanId={activePlanId} />}
+        {page === "calendar" && (
+          <Planner 
+            activePlanId={activePlanId} 
+            activeTimerId={activeTimerId}
+            setActiveTimerId={setActiveTimerId}
+          />
+        )}
         {page === "assistant" && <AIAssistant syllabusText={syllabusText} />}
         {page === "quiz" && <Quiz syllabusText={syllabusText} />}
         {page === "profile" && <Profile onLogout={onLogout} />}

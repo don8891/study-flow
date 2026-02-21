@@ -2,14 +2,18 @@ import { useEffect, useState } from "react";
 import { auth } from "../firebase";
 import { logStudySession } from "../api/firestore";
 
-function PomodoroTimer({ topic, duration, onComplete, completed }) {
+function PomodoroTimer({ topic, duration, onComplete, completed, timerId, activeTimerId, setActiveTimerId }) {
   const [secondsLeft, setSecondsLeft] = useState(parseInt(duration) * 60 || 25 * 60);
   const [isActive, setIsActive] = useState(false);
 
   // Sync with duration if topic changes
   useEffect(() => {
     setSecondsLeft(parseInt(duration) * 60 || 25 * 60);
-    setIsActive(false);
+    // If this specific timer was running but the topic changed, reset it
+    if (isActive && activeTimerId === timerId) {
+      setIsActive(false);
+      setActiveTimerId(null);
+    }
   }, [topic, duration]);
 
   useEffect(() => {
@@ -28,6 +32,8 @@ function PomodoroTimer({ topic, duration, onComplete, completed }) {
 
   const handlePhaseEnd = async () => {
     setIsActive(false);
+    if (setActiveTimerId) setActiveTimerId(null);
+
     const uid = auth.currentUser?.uid;
     
     // Determine type for logging
@@ -40,7 +46,10 @@ function PomodoroTimer({ topic, duration, onComplete, completed }) {
     if (onComplete) onComplete(); 
   };
 
-  const toggle = () => setIsActive(!isActive);
+  const startTimer = () => {
+    if (setActiveTimerId) setActiveTimerId(timerId);
+    setIsActive(true);
+  };
 
   const formatTime = (s) => {
     const m = Math.floor(s / 60);
@@ -49,6 +58,7 @@ function PomodoroTimer({ topic, duration, onComplete, completed }) {
   };
 
   const isBreak = topic.toLowerCase().includes("break");
+  const isOtherTimerRunning = activeTimerId && activeTimerId !== timerId;
 
   return (
     <div style={{ marginTop: '10px' }}>
@@ -76,16 +86,18 @@ function PomodoroTimer({ topic, duration, onComplete, completed }) {
           </span>
           {!completed && !isActive && (
             <button 
-              onClick={(e) => { e.preventDefault(); toggle(); }} 
+              onClick={(e) => { e.preventDefault(); startTimer(); }} 
+              disabled={isOtherTimerRunning}
               style={{ 
                 padding: '6px 16px', 
                 fontSize: '0.8rem', 
                 borderRadius: '8px',
                 border: 'none',
-                background: 'var(--primary)',
+                background: isOtherTimerRunning ? 'var(--text-muted)' : 'var(--primary)',
                 color: 'white',
-                cursor: 'pointer',
-                fontWeight: '600'
+                cursor: isOtherTimerRunning ? 'not-allowed' : 'pointer',
+                fontWeight: '600',
+                opacity: isOtherTimerRunning ? 0.5 : 1
               }}
             >
               Start
