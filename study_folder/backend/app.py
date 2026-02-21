@@ -42,8 +42,12 @@ def clean_syllabus_text(text):
 def generate_structured_topics(text):
     print(f"DEBUG: Generating topics for text length: {len(text)}")
     prompt = f"""
-    Extract clear, concise study topics from this syllabus.
-    Each topic must be short (max 8 words).
+    Extract ONLY clear, academic subject topics and sub-topics from this syllabus.
+    
+    CRITICAL CONSTRAINTS:
+    - IGNORE all metadata: marks, weightage, credits, total hours, internal/external marks, exam patterns, or timing information.
+    - Each topic must be short (max 8 words).
+    - Provide topics as a plain list.
 
     Syllabus:
     {text}
@@ -151,11 +155,18 @@ def ai_assistant():
 
     if task == "summary":
         prompt = f"""
-        Generate a comprehensive daily study plan from this syllabus. 
-        For each topic, include specific suggested study timings (e.g., 10:00 AM - 12:00 PM) 
-        and incorporate mandatory rest breaks (e.g., 12:00 PM - 12:30 PM) to ensure a balanced routine.
-        Use clear, structured bullet points.
+        Extract the core academic topics and generate a study strategy from the syllabus below.
 
+        CRITICAL CONSTRAINTS:
+        - ONLY include academic subject topics.
+        - COMPLETELY IGNORE: total marks, weightage, credits, total hours, exam patterns, or timing information.
+        - Recommend the **Pomodoro Technique** for studying these topics:
+            1. Work for 25 minutes.
+            2. Take a 5-minute break.
+            3. After 4 sessions, take a longer 15-30 minute break.
+        - Use clear bullet points for the topics.
+
+        Syllabus Content:
         {content[:3000]}
         """
 

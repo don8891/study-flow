@@ -122,3 +122,16 @@ export async function updatePlanTasks(uid, planId, tasks) {
   const ref = doc(db, "users", uid, "studyPlans", planId);
   await updateDoc(ref, { tasks });
 }
+
+/* Log a completed study session */
+export async function logStudySession(uid, topic, duration, type, metadata = {}) {
+  const ref = collection(db, "users", uid, "studySessions");
+  const sessionDoc = doc(ref);
+  await setDoc(sessionDoc, {
+    topic,
+    duration,
+    type,
+    metadata,
+    timestamp: new Date()
+  });
+}

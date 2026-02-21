@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { auth } from "../firebase";
 import { getStudyPlan, getUserProfile, getStudyPlansList, deleteStudyPlan, updatePlanTasks, recordActivity } from "../api/firestore";
 import Card from "../components/Card";
+import PomodoroTimer from "../components/PomodoroTimer";
 
 async function toggleTaskComplete(task, tasks, setTasks, activePlanId) {
   const isNowCompleted = true; // Only marking as completed via timer
@@ -21,76 +22,6 @@ async function toggleTaskComplete(task, tasks, setTasks, activePlanId) {
   }
 }
 
-function StudyTimer({ minutes, onComplete, completed }) {
-  const [seconds, setSeconds] = useState(parseInt(minutes) * 60 || 0);
-  const [isActive, setIsActive] = useState(false);
-  const [hasCompleted, setHasCompleted] = useState(false);
-
-  useEffect(() => {
-    let interval = null;
-    if (isActive && seconds > 0) {
-      interval = setInterval(() => {
-        setSeconds((prev) => prev - 1);
-      }, 1000);
-    } else if (seconds === 0 && isActive && !hasCompleted && !completed) {
-      setHasCompleted(true);
-      setIsActive(false);
-      if (onComplete) onComplete();
-      clearInterval(interval);
-    } else {
-      clearInterval(interval);
-    }
-    return () => clearInterval(interval);
-  }, [isActive, seconds, onComplete, hasCompleted, completed]);
-
-  const toggle = () => {
-    if (completed) return;
-    setIsActive(!isActive);
-  };
-  
-  const formatTime = (s) => {
-    const m = Math.floor(s / 60);
-    const rs = s % 60;
-    return `${m}:${rs < 10 ? '0' : ''}${rs}`;
-  };
-
-  if (!minutes || isNaN(parseInt(minutes))) return null;
-
-  return (
-    <div style={{ 
-      display: 'flex', 
-      alignItems: 'center', 
-      gap: '10px', 
-      marginTop: '5px'
-    }}>
-      <span style={{ 
-        fontFamily: 'monospace', 
-        fontSize: '1rem', 
-        color: completed ? 'var(--text-muted)' : 'var(--primary)', 
-        fontWeight: 'bold',
-        textDecoration: completed ? 'line-through' : 'none'
-      }}>
-        {completed ? "Done!" : formatTime(seconds)}
-      </span>
-      {!completed && (
-        <button 
-          onClick={(e) => { e.preventDefault(); toggle(); }} 
-          style={{ 
-            padding: '2px 8px', 
-            fontSize: '0.7rem', 
-            borderRadius: '4px',
-            border: 'none',
-            background: isActive ? '#ef4444' : 'var(--primary)',
-            color: 'white',
-            cursor: 'pointer'
-          }}
-        >
-          {isActive ? 'Pause' : 'Start'}
-        </button>
-      )}
-    </div>
-  );
-}
 
 function Dashboard({ goToUpload, activePlanId, setActivePlanId, setPage }) {
   const [tasks, setTasks] = useState([]);
@@ -262,8 +193,9 @@ function Dashboard({ goToUpload, activePlanId, setActivePlanId, setPage }) {
                       display: "flex",
                       justifyContent: "center"
                     }}>
-                      <StudyTimer 
-                        minutes={todayTasks.filter(t => !t.completed)[0].duration} 
+                      <PomodoroTimer 
+                        topic={todayTasks.filter(t => !t.completed)[0].topic}
+                        duration={todayTasks.filter(t => !t.completed)[0].duration}
                         onComplete={() => toggleTaskComplete(todayTasks.filter(t => !t.completed)[0], tasks, setTasks, activePlanId)}
                         completed={false}
                       />

@@ -3,83 +3,10 @@ import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import { format } from "date-fns";
 import { auth } from "../firebase";
-import { getStudyPlan, recordActivity, updatePlanTasks } from "../api/firestore";
+import { getStudyPlan, recordActivity, updatePlanTasks, logStudySession } from "../api/firestore";
 import Card from "../components/Card";
+import PomodoroTimer from "../components/PomodoroTimer";
 
-function StudyTimer({ minutes, onComplete, completed }) {
-  const [seconds, setSeconds] = useState(parseInt(minutes) * 60 || 0);
-  const [isActive, setIsActive] = useState(false);
-  const [hasCompleted, setHasCompleted] = useState(false);
-
-  useEffect(() => {
-    let interval = null;
-    if (isActive && seconds > 0) {
-      interval = setInterval(() => {
-        setSeconds((prev) => prev - 1);
-      }, 1000);
-    } else if (seconds === 0 && isActive && !hasCompleted && !completed) {
-      setHasCompleted(true);
-      setIsActive(false);
-      if (onComplete) onComplete();
-      clearInterval(interval);
-    } else {
-      clearInterval(interval);
-    }
-    return () => clearInterval(interval);
-  }, [isActive, seconds, onComplete, hasCompleted, completed]);
-
-  const toggle = () => {
-    if (completed) return;
-    setIsActive(!isActive);
-  };
-  
-  const formatTime = (s) => {
-    const m = Math.floor(s / 60);
-    const rs = s % 60;
-    return `${m}:${rs < 10 ? '0' : ''}${rs}`;
-  };
-
-  if (!minutes || isNaN(parseInt(minutes))) return null;
-
-  return (
-    <div style={{ 
-      display: 'flex', 
-      alignItems: 'center', 
-      gap: '15px', 
-      marginTop: '10px',
-      padding: '8px 12px',
-      background: 'rgba(255,255,255,0.05)',
-      borderRadius: '8px',
-      width: 'fit-content'
-    }}>
-      <span style={{ 
-        fontFamily: 'monospace', 
-        fontSize: '1.1rem', 
-        color: completed ? 'var(--text-muted)' : 'var(--primary)', 
-        fontWeight: 'bold',
-        textDecoration: completed ? 'line-through' : 'none'
-      }}>
-        {completed ? "Done!" : formatTime(seconds)}
-      </span>
-      {!completed && (
-        <button 
-          onClick={(e) => { e.preventDefault(); toggle(); }} 
-          style={{ 
-            padding: '4px 12px', 
-            fontSize: '0.8rem', 
-            borderRadius: '6px',
-            border: 'none',
-            background: isActive ? '#ef4444' : 'var(--primary)',
-            color: 'white',
-            cursor: 'pointer'
-          }}
-        >
-          {isActive ? 'Pause' : 'Start Timer'}
-        </button>
-      )}
-    </div>
-  );
-}
 
 function Planner({ activePlanId }) {
   const [tasks, setTasks] = useState([]);
@@ -203,8 +130,9 @@ function Planner({ activePlanId }) {
                   {task.completed && <span style={{ color: "var(--success)", fontWeight: "bold", fontSize: "0.8rem" }}>DONE</span>}
                 </div>
                 <div style={{ marginTop: "16px", padding: "12px", background: "var(--primary-light)", borderRadius: "12px" }}>
-                  <StudyTimer 
-                    minutes={task.duration} 
+                  <PomodoroTimer 
+                    topic={task.topic} 
+                    duration={task.duration}
                     onComplete={() => toggleTask(task)} 
                     completed={task.completed}
                   />

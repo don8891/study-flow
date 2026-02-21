@@ -54,20 +54,24 @@ function Upload({
         const studyDate = addDays(today, targetDay);
         const dateStr = format(studyDate, "yyyy-MM-dd");
 
-        // Study Session
+        // Focus Session (25 mins)
         tasks.push({
           date: dateStr,
-          topic: `Study: ${topic}`,
-          duration: "90", // 1 hr 30 min
-          completed: false
+          topic: topic,
+          duration: "25",
+          completed: false,
+          type: "focus"
         });
 
-        // Rest Session
+        // Break Session
+        const sessionNum = index + 1;
+        const isLongBreak = sessionNum % 4 === 0;
         tasks.push({
           date: dateStr,
-          topic: "Rest & Recharge ☕",
-          duration: "15", // 15 min
-          completed: false
+          topic: isLongBreak ? "Long Break 🧘" : "Short Break ☕",
+          duration: isLongBreak ? "20" : "5",
+          completed: false,
+          type: "break"
         });
       });
 
