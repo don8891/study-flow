@@ -48,39 +48,42 @@ function Upload({
       // Map topics to study days using an Even Distribution algorithm
       // This ensures topics are spread across the entire study period
       // instead of being stacked at the beginning.
-      topics.forEach((topic, index) => {
-        // Calculate target day by spreading index across total studyDays
-        const targetDay = Math.floor(index * studyDays / topics.length);
+      let taskCounter = 0;
+      res.topics.forEach((mainItem, topicIndex) => {
+        // Calculate target day for this main topic
+        const targetDay = Math.floor(topicIndex * studyDays / res.topics.length);
         const studyDate = addDays(today, targetDay);
         const dateStr = format(studyDate, "yyyy-MM-dd");
 
-        // Focus Session (25 mins)
-        tasks.push({
-          date: dateStr,
-          topic: topic,
-          duration: "25",
-          completed: false,
-          type: "focus"
-        });
+        // If no subtopics, just add the topic itself
+        const itemsToSchedule = mainItem.subtopics.length > 0 
+          ? mainItem.subtopics 
+          : [mainItem.topic];
 
-        // Break Session
-        const sessionNum = index + 1;
-        const isLongBreak = sessionNum % 4 === 0;
-        tasks.push({
-          date: dateStr,
-          topic: isLongBreak ? "Long Break 🧘" : "Short Break ☕",
-          duration: isLongBreak ? "20" : "5",
-          completed: false,
-          type: "break"
-        });
-      });
+        itemsToSchedule.forEach((subtopic, subIndex) => {
+          taskCounter++;
+          
+          // Add Focus Session (25 mins)
+          tasks.push({
+            date: dateStr,
+            topic: subIndex === 0 && mainItem.subtopics.length > 0 
+              ? `${mainItem.topic}: ${subtopic}` 
+              : subtopic,
+            duration: "25",
+            completed: false,
+            type: "focus"
+          });
 
-      const examDayMinus1 = addDays(today, totalDays - 1);
-      tasks.push({
-        date: format(examDayMinus1, "yyyy-MM-dd"),
-        topic: "Comprehensive Revision",
-        duration: "180", // Default to 180 minutes
-        completed: false
+          // Add Break
+          const isLongBreak = taskCounter % 4 === 0;
+          tasks.push({
+            date: dateStr,
+            topic: isLongBreak ? "Long Break 🧘" : "Short Break ☕",
+            duration: isLongBreak ? "20" : "5",
+            completed: false,
+            type: "break"
+          });
+        });
       });
 
       const planId = await saveStudyPlan(uid, tasks, syllabusName, examDate);

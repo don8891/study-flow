@@ -25,31 +25,56 @@ headers = {
     "Authorization": f"Bearer {HF_TOKEN}"
 }
 
+import re
+
 def clean_syllabus_text(text):
+    # Standard cleaning
     lines = text.split("\n")
     cleaned = []
+    
+    # Metadata keywords to prune entire lines
+    blacklist_keywords = [
+        "mark", "score", "credit", "weightage", "hour", "exam", "internal", 
+        "external", "total", "pattern", "duration", "question paper", "allotment",
+        "time", "minute", "mins", "hrs", "maximum", "minimum", "sec", "section"
+    ]
 
     for line in lines:
         line = line.strip()
-        if len(line) < 5:
+        if len(line) < 4:
             continue
-        if any(char.isdigit() for char in line[:2]):
-            line = line.lstrip("0123456789. ")
-        cleaned.append(line)
+        
+        # Check if line contains any blacklist keywords (case-insensitive)
+        if any(kw in line.lower() for kw in blacklist_keywords):
+            continue
+            
+        # Strip leading numbers/bullets
+        line = re.sub(r"^[0-9.\-\s]+", "", line)
+        
+        if len(line) > 3:
+            cleaned.append(line)
 
     return "\n".join(cleaned)
+
+import json
 
 def generate_structured_topics(text):
     print(f"DEBUG: Generating topics for text length: {len(text)}")
     prompt = f"""
-    Extract ONLY clear, academic subject topics and sub-topics from this syllabus.
+    Extract the core academic subject topics and their relevant sub-topics from the following syllabus.
+    Group sub-topics under their respective parent topics.
     
-    CRITICAL CONSTRAINTS:
-    - IGNORE all metadata: marks, weightage, credits, total hours, internal/external marks, exam patterns, or timing information.
-    - Each topic must be short (max 8 words).
-    - Provide topics as a plain list.
+    STRICT CATEGORICAL BAN:
+    - DO NOT include marks, credits, scores, hours, or exam timings.
+    - DO NOT include administrative instructions.
+    
+    FORMAT REQUIREMENT:
+    Return ONLY a valid JSON array of objects in this exact format:
+    [
+      {{ "topic": "Main Topic Name", "subtopics": ["Subtopic A", "Subtopic B"] }}
+    ]
 
-    Syllabus:
+    Syllabus Content:
     {text}
     """
 
@@ -63,9 +88,22 @@ def generate_structured_topics(text):
         result = response.json()
         print(f"DEBUG: HF Result: {result}")
 
+        generated_text = ""
         if isinstance(result, list) and len(result) > 0:
-            return result[0].get("generated_text", "")
-        return ""
+            generated_text = result[0].get("generated_text", "")
+        
+        # Try to extract JSON from the generated text
+        try:
+            # Look for the JSON array starting with [
+            start_idx = generated_text.find('[')
+            end_idx = generated_text.rfind(']') + 1
+            if start_idx != -1 and end_idx != -1:
+                json_str = generated_text[start_idx:end_idx]
+                return json.loads(json_str)
+        except:
+            print("DEBUG: Could not parse AI response as JSON")
+            
+        return generated_text # Fallback to raw text if JSON fails
     except Exception as e:
         print(f"DEBUG: HF Error: {str(e)}")
         return ""
@@ -129,23 +167,52 @@ def upload_syllabus():
     
     topics_raw = generate_structured_topics(cleaned_text)
     
-    # NEW Fallback Logic: If AI fails, use raw lines
-    if not topics_raw.strip():
-        print("DEBUG: AI failed or returned empty - using fallback extraction")
-        topics = [
-            line.strip()
-            for line in cleaned_text.split("\n")
-            if len(line.strip()) > 10 # Only lines with substantial content
-        ]
+    # Blacklist filter for final topics
+    forbidden = ["mark", "score", "credit", "weightage", "hour", "exam", "internal", "external", "total", "time", "hrs", "mins"]
+    
+    final_topics = []
+
+    if isinstance(topics_raw, list):
+        # AI returned structured JSON
+        for item in topics_raw:
+            main_topic = item.get("topic", "").strip()
+            if main_topic and not any(f in main_topic.lower() for f in forbidden):
+                subtopics = [
+                    s.strip() for s in item.get("subtopics", [])
+                    if s.strip() and not any(f in s.lower() for f in forbidden)
+                ]
+                final_topics.append({
+                    "topic": main_topic,
+                    "subtopics": subtopics
+                })
     else:
-        topics = [
+        # Fallback to flat list handling if JSON fails
+        print("DEBUG: Using flat list fallback for topics")
+        raw_lines = [
             line.strip()
             for line in topics_raw.split("\n")
-            if line.strip()
+            if line.strip() and len(line.strip()) > 5
+        ] if topics_raw else [
+            line.strip()
+            for line in cleaned_text.split("\n")
+            if len(line.strip()) > 10
         ]
 
-    print(f"DEBUG: Final topics count: {len(topics)}")
-    return jsonify({"success": True, "topics": topics, "text": cleaned_text})
+        # Filter flat list
+        filtered_lines = [
+            t for t in raw_lines 
+            if not any(f in t.lower() for f in forbidden)
+        ]
+
+        # Convert flat list to structured format for frontend consistency
+        for t in filtered_lines:
+            final_topics.append({
+                "topic": t,
+                "subtopics": []
+            })
+
+    print(f"DEBUG: Final topics count: {len(final_topics)}")
+    return jsonify({"success": True, "topics": final_topics, "text": cleaned_text})
 
 @app.route("/ai-assistant", methods=["POST"])
 def ai_assistant():
