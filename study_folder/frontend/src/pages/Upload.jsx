@@ -14,6 +14,7 @@ function Upload({
   setSyllabusText
 }) {
   const [studyPreference, setStudyPreference] = React.useState("morning");
+  const [studyHours, setStudyHours] = React.useState(4);
 
   async function handleUpload() {
     if (!file || !examDate || !syllabusName.trim()) {
@@ -47,37 +48,39 @@ function Upload({
 
       const tasks = [];
       const studyDays = totalDays - 1; // Only 1 day for revision
+      const maxMinsPerDay = studyHours * 60;
       
       // Time tracking for real-time schedule
-      const startHour = studyPreference === "morning" ? 8 : 14; // 8 AM or 2 PM
-      let currentTimePointer = new Map(); // Tracks current time for each date
-
+      const startHour = studyPreference === "morning" ? 8 : 14; 
+      let currentStudyDate = new Date(today);
+      let currentTimePointer = new Date(currentStudyDate);
+      currentTimePointer.setHours(startHour, 0, 0, 0);
+      
+      let minsUsedToday = 0;
       let taskCounter = 0;
+
       res.topics.forEach((mainItem, topicIndex) => {
-        const targetDay = Math.floor(topicIndex * studyDays / res.topics.length);
-        const studyDate = addDays(today, targetDay);
-        const dateStr = format(studyDate, "yyyy-MM-dd");
-
-        // Initialize time for this date if it's the first task
-        if (!currentTimePointer.has(dateStr)) {
-          const startTime = new Date(studyDate);
-          startTime.setHours(startHour, 0, 0, 0);
-          currentTimePointer.set(dateStr, startTime);
-        }
-
         const itemsToSchedule = mainItem.subtopics.length > 0 
           ? mainItem.subtopics 
           : [mainItem.topic];
 
         itemsToSchedule.forEach((subtopic, subIndex) => {
+          // If we exceed daily limit, move to next day
+          if (minsUsedToday + 30 > maxMinsPerDay) { // 25 min session + 5 min break buffer
+            currentStudyDate = addDays(currentStudyDate, 1);
+            currentTimePointer = new Date(currentStudyDate);
+            currentTimePointer.setHours(startHour, 0, 0, 0);
+            minsUsedToday = 0;
+            taskCounter = 0; // Reset counter for long break tracking
+          }
+
+          const dateStr = format(currentStudyDate, "yyyy-MM-dd");
           taskCounter++;
           
-          let dayTime = currentTimePointer.get(dateStr);
-
           // Focus Session
-          const focusStart = format(dayTime, "hh:mm a");
-          dayTime.setMinutes(dayTime.getMinutes() + 25);
-          const focusEnd = format(dayTime, "hh:mm a");
+          const focusStart = format(currentTimePointer, "hh:mm a");
+          currentTimePointer.setMinutes(currentTimePointer.getMinutes() + 25);
+          const focusEnd = format(currentTimePointer, "hh:mm a");
 
           tasks.push({
             date: dateStr,
@@ -92,13 +95,15 @@ function Upload({
             preference: studyPreference
           });
 
+          minsUsedToday += 25;
+
           // Break
           const isLongBreak = taskCounter % 4 === 0;
           const breakDuration = isLongBreak ? 20 : 5;
           
-          const breakStart = format(dayTime, "hh:mm a");
-          dayTime.setMinutes(dayTime.getMinutes() + breakDuration);
-          const breakEnd = format(dayTime, "hh:mm a");
+          const breakStart = format(currentTimePointer, "hh:mm a");
+          currentTimePointer.setMinutes(currentTimePointer.getMinutes() + breakDuration);
+          const breakEnd = format(currentTimePointer, "hh:mm a");
 
           tasks.push({
             date: dateStr,
@@ -111,9 +116,15 @@ function Upload({
             preference: studyPreference
           });
 
-          currentTimePointer.set(dateStr, dayTime);
+          minsUsedToday += breakDuration;
         });
       });
+
+      // Final Check: Validation for exam date
+      const lastTaskDate = tasks.length > 0 ? new Date(tasks[tasks.length - 1].date) : today;
+      if (lastTaskDate >= exam) {
+        setStatus("Warning: Syllabus is too large for these hours. Plan extends to exam date.");
+      }
 
       const planId = await saveStudyPlan(uid, tasks, syllabusName, examDate);
       setActivePlanId(planId);
@@ -162,6 +173,29 @@ function Upload({
             value={examDate}
             onChange={(e) => setExamDate(e.target.value)}
           />
+        </div>
+      </Card>
+
+      <Card title="Daily Study Limit">
+        <p style={{ marginBottom: "15px", fontSize: "0.9rem" }}>How many hours can you dedicate each day?</p>
+        <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+          <input 
+            type="range" 
+            min="1" 
+            max="12" 
+            value={studyHours} 
+            onChange={(e) => setStudyHours(parseInt(e.target.value))}
+            style={{ flex: 1, accentColor: "var(--primary)" }}
+          />
+          <span style={{ 
+            fontSize: "1.2rem", 
+            fontWeight: "bold", 
+            color: "var(--primary)",
+            minWidth: "80px",
+            textAlign: "right"
+          }}>
+            {studyHours} {studyHours === 1 ? "Hour" : "Hours"}
+          </span>
         </div>
       </Card>
 
