@@ -222,7 +222,21 @@ def ai_assistant():
     content = data.get("content")
 
     if task == "summary":
-        prompt = f"Summarize this syllabus:\n{content[:2000]}"
+        prompt = f"""
+        Analyze the following syllabus and create a comprehensive study guide.
+        
+        SYLLABUS CONTENT:
+        {content[:2000]}
+        
+        YOUR RESPONSE SHOULD INCLUDE:
+        1. CONCEPT EXPLANATION: A brief overview of the main subjects.
+        2. KEY POINTS: The most important theories or laws mentioned.
+        3. IMPORTANT SUBTOPICS: A list of core chapters/topics to focus on.
+        4. MEMORY TIPS: Mnemonics or simple ways to remember complex parts.
+        5. FAST REVISION NOTES: Bullet points for quick reading before an exam.
+        
+        Format the output clearly using bold headers and bullet points.
+        """
 
     elif task == "quiz":
         prompt = f"""
