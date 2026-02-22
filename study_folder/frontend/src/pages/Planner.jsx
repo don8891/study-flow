@@ -66,6 +66,9 @@ function Planner({ activePlanId, activeTimerId, setActiveTimerId }) {
                 onChange={setSelectedDate}
                 value={selectedDate}
                 className="custom-calendar"
+                minDetail="month"
+                prev2Label={null}
+                next2Label={null}
                 tileClassName={({ date }) => {
                   const dateString = format(date, "yyyy-MM-dd");
                   if (dateString === planData?.examDate) return "exam-tile";
@@ -110,24 +113,32 @@ function Planner({ activePlanId, activeTimerId, setActiveTimerId }) {
           ) : (
             tasksForDay.map((task, index) => (
               <Card key={index} className="card-hover">
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                     <div style={{ 
-                      width: "12px", 
-                      height: "12px", 
+                      width: "14px", 
+                      height: "14px", 
                       borderRadius: "50%", 
                       background: task.completed ? "var(--success)" : "var(--accent)" 
                     }} />
-                    <span style={{
-                      fontSize: '1.1rem',
-                      fontWeight: "600",
-                      textDecoration: task.completed ? "line-through" : "none",
-                      color: task.completed ? "var(--text-muted)" : "var(--text-main)"
-                    }}>
-                      {task.topic}
-                    </span>
+                    <div style={{ display: "flex", flexDirection: "column" }}>
+                      <span style={{
+                        fontSize: '1.1rem',
+                        fontWeight: "700",
+                        textDecoration: task.completed ? "line-through" : "none",
+                        color: task.completed ? "var(--text-muted)" : "var(--text-main)",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px"
+                      }}>
+                        {task.preference === "morning" ? "☀️" : "🌅"} {task.topic}
+                      </span>
+                      <span style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "2px" }}>
+                        🕒 {task.startTime} - {task.endTime} ({task.duration} mins)
+                      </span>
+                    </div>
                   </div>
-                  {task.completed && <span style={{ color: "var(--success)", fontWeight: "bold", fontSize: "0.8rem" }}>DONE</span>}
+                  {task.completed && <span style={{ color: "var(--success)", fontWeight: "bold", fontSize: "0.8rem" }}>✓ DONE</span>}
                 </div>
                 <div style={{ marginTop: "16px", padding: "12px", background: "var(--primary-light)", borderRadius: "12px" }}>
                   <PomodoroTimer 

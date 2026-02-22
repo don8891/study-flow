@@ -183,6 +183,25 @@ function Dashboard({ goToUpload, activePlanId, setActivePlanId, setPage, activeT
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 {todayTasks.filter(t => !t.completed).length > 0 ? (
                   <div style={{ width: "100%" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+                      <div style={{ 
+                        display: "inline-flex", 
+                        alignItems: "center", 
+                        gap: "6px", 
+                        padding: "4px 12px", 
+                        borderRadius: "20px", 
+                        fontSize: "0.75rem", 
+                        fontWeight: "bold",
+                        background: todayTasks.filter(t => !t.completed)[0].preference === "morning" ? "#fffbeb" : "#fff7ed",
+                        color: todayTasks.filter(t => !t.completed)[0].preference === "morning" ? "#b45309" : "#c2410c",
+                        border: "1px solid currentColor"
+                      }}>
+                        {todayTasks.filter(t => !t.completed)[0].preference === "morning" ? "☀️ MORNING SESSION" : "🌅 AFTERNOON SESSION"}
+                      </div>
+                      <div style={{ fontSize: "0.85rem", fontWeight: "bold", color: "var(--primary)" }}>
+                        🕒 {todayTasks.filter(t => !t.completed)[0].startTime} - {todayTasks.filter(t => !t.completed)[0].endTime}
+                      </div>
+                    </div>
                     <h2 style={{ fontSize: "1.2rem", margin: "0 0 16px 0" }}>
                       {todayTasks.filter(t => !t.completed)[0].topic}
                     </h2>
@@ -219,25 +238,38 @@ function Dashboard({ goToUpload, activePlanId, setActivePlanId, setPage, activeT
                   todayTasks.map((task, idx) => (
                     <div key={idx} style={{ 
                       display: "flex", 
-                      justifyContent: "space-between", 
-                      alignItems: "center",
-                      padding: "12px 16px",
+                      flexDirection: "column",
+                      gap: "8px",
+                      padding: "16px",
                       background: task.completed ? "var(--primary-light)" : "rgba(255,255,255,0.5)",
-                      borderRadius: "12px",
+                      borderRadius: "16px",
                       border: "1px solid var(--border)"
                     }}>
-                      <span style={{ 
-                        fontWeight: "500", 
-                        textDecoration: task.completed ? "line-through" : "none",
-                        color: task.completed ? "var(--text-muted)" : "var(--text-main)"
-                      }}>
-                        {task.topic}
-                      </span>
-                      {task.completed ? (
-                        <span style={{ color: "var(--success)", fontSize: "0.8rem", fontWeight: "bold" }}>COMPLETED</span>
-                      ) : (
-                        <span style={{ color: "var(--accent)", fontSize: "0.8rem" }}>Pending</span>
-                      )}
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <span style={{ fontSize: "1.1rem" }}>{task.preference === "morning" ? "☀️" : "🌅"}</span>
+                          <span style={{ 
+                            fontWeight: "600", 
+                            textDecoration: task.completed ? "line-through" : "none",
+                            color: task.completed ? "var(--text-muted)" : "var(--text-main)"
+                          }}>
+                            {task.topic}
+                          </span>
+                        </div>
+                        {task.completed ? (
+                          <span style={{ color: "var(--success)", fontSize: "0.75rem", fontWeight: "bold" }}>+10 XP ✓</span>
+                        ) : (
+                          <span style={{ color: "var(--accent)", fontSize: "0.75rem", fontWeight: "bold" }}>PENDING</span>
+                        )}
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: "500" }}>
+                          🕒 {task.startTime} - {task.endTime}
+                        </span>
+                        <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                          ({task.duration} mins)
+                        </span>
+                      </div>
                     </div>
                   ))
                 )}

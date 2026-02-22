@@ -259,70 +259,141 @@ button:active {
 }
 
 /* Custom Calendar Styles */
+/* Custom Calendar Styles - Dark Premium Redesign */
 .custom-calendar {
   width: 100% !important;
-  background: #0f2a28 !important; /* Dark Teal */
+  background: #1a1a1a !important; 
   border: none !important;
   font-family: inherit !important;
-  border-radius: 20px;
-  padding: 10px;
+  border-radius: 32px;
+  padding: 24px;
   color: white !important;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+  position: relative;
+  overflow: hidden;
 }
 
-.custom-calendar .react-calendar__navigation button {
-  color: white !important;
+/* Purple Top Glow */
+.custom-calendar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 4px;
+  background: #7c3aed;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  box-shadow: 0 0 20px #7c3aed;
+  z-index: 1;
+}
+
+.custom-calendar .react-calendar__navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  height: auto;
+}
+
+.custom-calendar .react-calendar__navigation__label {
+  font-weight: 700 !important;
+  font-size: 1.2rem !important;
+  color: var(--text-main) !important;
+  flex-grow: 1 !important;
+  text-align: center;
+}
+
+.custom-calendar .react-calendar__navigation__arrow {
   min-width: 44px;
-  background: none;
-  font-size: 1.2rem;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: white !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  transition: all 0.2s ease;
 }
 
-.custom-calendar .react-calendar__navigation button:enabled:hover,
-.custom-calendar .react-calendar__navigation button:enabled:focus {
-  background-color: rgba(255, 255, 255, 0.1) !important;
-  border-radius: 10px;
+.custom-calendar .react-calendar__navigation__arrow:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
 }
 
 .custom-calendar .react-calendar__month-view__weekdays {
-  color: var(--accent) !important;
-  font-weight: bold;
+  color: #666 !important;
+  font-weight: 700;
   text-transform: uppercase;
   font-size: 0.75rem;
+  margin-bottom: 20px;
+}
+
+.custom-calendar .react-calendar__month-view__weekdays__weekday abbr {
+  text-decoration: none !important;
 }
 
 .custom-calendar .react-calendar__tile {
-  padding: 12px 8px !important;
-  border-radius: 12px;
+  padding: 16px 8px !important;
+  border-radius: 50%;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.2s;
-  color: rgba(255, 255, 255, 0.8) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-size: 1.1rem;
+  font-weight: 500;
+  position: relative;
 }
 
-.custom-calendar .react-calendar__tile:enabled:hover,
-.custom-calendar .react-calendar__tile:enabled:focus {
-  background-color: var(--primary) !important;
-  color: white !important;
+.custom-calendar .react-calendar__tile:enabled:hover {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.custom-calendar .react-calendar__month-view__days__day--neighboringMonth {
+  color: rgba(255, 255, 255, 0.2) !important;
 }
 
 .custom-calendar .react-calendar__tile--now {
-  background: rgba(255, 255, 255, 0.1) !important;
-  color: white !important;
-  border: 1px solid var(--accent) !important;
+  background: none !important;
+  color: #7c3aed !important;
+  font-weight: 700;
 }
 
 .custom-calendar .react-calendar__tile--active {
-  background: var(--accent) !important;
-  color: #062d2a !important;
-  font-weight: bold;
-}
-
-.study-tile {
-  background: var(--primary) !important;
+  background: #7c3aed !important;
   color: white !important;
-  font-weight: bold;
+  font-weight: 700;
+  box-shadow: 0 0 20px rgba(124, 58, 237, 0.5);
 }
 
+/* Study & Exam Specifics for Dark Theme */
+.study-tile::after {
+  content: '';
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  background: #7c3aed;
+  border-radius: 50%;
+}
+
+/* Exam tile gets a subtle glowing outer ring */
 .exam-tile {
-  background: linear-gradient(135deg, var(--primary), var(--accent)) !important;
-  color: white !important;
-  font-weight: bold;
-  border-radius: 50% !important;
+  border: 1px solid rgba(124, 58, 237, 0.4) !important;
+}
+
+.exam-tile::before {
+  content: '🎯';
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  font-size: 0.9rem;
+  z-index: 2;
 }
