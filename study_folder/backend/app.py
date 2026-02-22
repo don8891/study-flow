@@ -223,7 +223,7 @@ def ai_assistant():
 
     if task == "summary":
         prompt = f"""
-        Analyze the following syllabus and create a comprehensive study guide.
+        Analyze the following syllabus and create a professional, comprehensive study guide.
         
         SYLLABUS CONTENT:
         {content[:2000]}
@@ -235,7 +235,11 @@ def ai_assistant():
         4. MEMORY TIPS: Mnemonics or simple ways to remember complex parts.
         5. FAST REVISION NOTES: Bullet points for quick reading before an exam.
         
-        Format the output clearly using bold headers and bullet points.
+        FORMATTING CONSTRAINTS:
+        - Use ONLY '-' for bullet points (no '+' or '*' at the start of lines).
+        - Use **bold** for key section titles and important terms.
+        - Use __underline__ for critical academic concepts.
+        - Ensure the output is clean and professional without unnecessary conversational filler.
         """
 
     elif task == "quiz":
@@ -254,7 +258,18 @@ def ai_assistant():
         """
 
     elif task == "doubt":
-        prompt = f"Explain clearly:\n{content}"
+        prompt = f"""
+        Explain the following concept clearly and professionally.
+        
+        CONCEPT/QUESTION:
+        {content}
+
+        FORMATTING CONSTRAINTS:
+        - Use ONLY '-' for bullet points.
+        - Use **bold** for important terms.
+        - Use __underline__ for key academic concepts.
+        - Remove any unnecessary conversational symbols like '+' or '*'.
+        """
 
     else:
         return {"success": False}

@@ -7,6 +7,49 @@ function AIAssistant({ syllabusText, summary, setSummary, chat, setChat, activeT
   const [userQuery, setUserQuery] = useState("");
   const [loadingChat, setLoadingChat] = useState(false);
 
+  // Helper to format AI response (Bold, Underline, Bullet Points)
+  const formatOutput = (text) => {
+    if (!text) return null;
+    
+    // Split by newlines to handle bullet points and structure
+    const lines = text.split("\n");
+    
+    return lines.map((line, i) => {
+      // Handle Bold (**text**)
+      let formattedLine = line.split(/(\*\*.*?\*\*)/).map((part, j) => {
+        if (part.startsWith("**") && part.endsWith("**")) {
+          return <strong key={j} style={{ color: "var(--primary)", fontWeight: "800" }}>{part.slice(2, -2)}</strong>;
+        }
+        return part;
+      });
+
+      // Handle Underline (__text__)
+      formattedLine = formattedLine.map((part, j) => {
+        if (typeof part === 'string') {
+          return part.split(/(__.*?__)/).map((subPart, k) => {
+            if (subPart.startsWith("__") && subPart.endsWith("__")) {
+              return <u key={k} style={{ textDecorationColor: "var(--accent)" }}>{subPart.slice(2, -2)}</u>;
+            }
+            return subPart;
+          });
+        }
+        return part;
+      });
+
+      // Handle Bullet Points
+      if (line.trim().startsWith("- ")) {
+        return (
+          <div key={i} style={{ display: "flex", gap: "10px", margin: "8px 0", paddingLeft: "10px" }}>
+            <span style={{ color: "var(--accent)", fontWeight: "bold" }}>•</span>
+            <div>{formattedLine}</div>
+          </div>
+        );
+      }
+
+      return <p key={i} style={{ margin: "10px 0" }}>{formattedLine}</p>;
+    });
+  };
+
   async function handleGetSummary() {
     if (!syllabusText) {
       alert("Please upload a syllabus first!");
@@ -43,80 +86,98 @@ function AIAssistant({ syllabusText, summary, setSummary, chat, setChat, activeT
       setLoadingChat(false);
     }
   }
-
   return (
     <div className="page" style={{ paddingBottom: "100px" }}>
       <header style={{ marginBottom: "30px" }}>
-        <h2 style={{ fontSize: "2rem", fontWeight: "800", background: "linear-gradient(to right, #ec4899, #8b5cf6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+        <h2 style={{ fontSize: "2.4rem", fontWeight: "900", background: "linear-gradient(135deg, var(--primary), var(--accent))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", letterSpacing: "-1px" }}>
           AI Learning Assistant
         </h2>
-        <p style={{ color: "var(--text-muted)" }}>Get summaries or clear your doubts instantly.</p>
+        <p style={{ color: "var(--text-muted)", fontSize: "1.1rem" }}>Get premium summaries or clear your doubts instantly.</p>
       </header>
 
-      <div style={{ display: "flex", gap: "10px", marginBottom: "30px", background: "rgba(255,255,255,0.05)", padding: "5px", borderRadius: "12px" }}>
+      <div style={{ display: "flex", gap: "12px", marginBottom: "30px", background: "rgba(17, 94, 89, 0.05)", padding: "8px", borderRadius: "16px", border: "1px solid rgba(17, 94, 89, 0.1)" }}>
         <button 
           onClick={() => setActiveTab("summary")}
           style={{ 
             flex: 1, 
-            padding: "10px", 
-            borderRadius: "8px", 
+            padding: "12px", 
+            borderRadius: "12px", 
             border: "none", 
             background: activeTab === "summary" ? "var(--primary)" : "transparent",
             color: activeTab === "summary" ? "white" : "var(--text-muted)",
-            fontWeight: "600",
-            cursor: "pointer"
+            fontWeight: "700",
+            cursor: "pointer",
+            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+            boxShadow: activeTab === "summary" ? "0 4px 12px rgba(17, 94, 89, 0.2)" : "none"
           }}
         >
-          Syllabus Summary
+          Syllabus Study Guide
         </button>
         <button 
           onClick={() => setActiveTab("doubt")}
           style={{ 
             flex: 1, 
-            padding: "10px", 
-            borderRadius: "8px", 
+            padding: "12px", 
+            borderRadius: "12px", 
             border: "none", 
             background: activeTab === "doubt" ? "var(--primary)" : "transparent",
             color: activeTab === "doubt" ? "white" : "var(--text-muted)",
-            fontWeight: "600",
-            cursor: "pointer"
+            fontWeight: "700",
+            cursor: "pointer",
+            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+            boxShadow: activeTab === "doubt" ? "0 4px 12px rgba(17, 94, 89, 0.2)" : "none"
           }}
         >
-          Doubt Clearing
+          Instant Doubt Clear
         </button>
       </div>
 
       {activeTab === "summary" ? (
         <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-          <Card>
-            <h3>Smart Summary</h3>
-            <p style={{ marginBottom: "20px", color: "var(--text-muted)" }}>
-              Summarize your syllabus into actionable bullet points.
+          <Card style={{ border: "1px solid rgba(17, 94, 89, 0.1)", background: "white" }}>
+            <h3 style={{ color: "var(--primary)", fontWeight: "800", display: "flex", alignItems: "center", gap: "10px" }}>
+              <span style={{ fontSize: "1.5rem" }}>📘</span> Smart Study Guide
+            </h3>
+            <p style={{ marginBottom: "25px", color: "var(--text-muted)" }}>
+              We've analyzed your syllabus to create a prioritized revision guide.
             </p>
             {!summary ? (
               <button 
                 className="btn-primary" 
                 onClick={handleGetSummary} 
                 disabled={loadingSummary}
-                style={{ width: "100%" }}
+                style={{ width: "100%", padding: "16px", borderRadius: "14px", fontSize: "1.1rem", background: "linear-gradient(135deg, var(--primary), #0d4a46)" }}
               >
-                {loadingSummary ? "Analyzing Syllabus..." : "Generate Summary"}
+                {loadingSummary ? "Generating Pro Guide..." : "Generate Study Guide"}
               </button>
             ) : (
-              <div className="summary-content" style={{ whiteSpace: "pre-wrap", background: "rgba(255,255,255,0.02)", padding: "20px", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)" }}>
-                {summary}
+              <div 
+                className="summary-content" 
+                style={{ 
+                  whiteSpace: "pre-wrap", 
+                  background: "var(--primary-light)", 
+                  padding: "25px", 
+                  borderRadius: "18px", 
+                  border: "1px solid rgba(17, 94, 89, 0.1)",
+                  color: "var(--text-main)",
+                  fontSize: "1.05rem",
+                  lineHeight: "1.6"
+                }}
+              >
+                {formatOutput(summary)}
               </div>
             )}
           </Card>
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-          <Card>
-            <div style={{ height: "400px", display: "flex", flexDirection: "column" }}>
-              <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "15px", marginBottom: "20px", padding: "10px" }}>
+          <Card style={{ border: "1px solid rgba(17, 94, 89, 0.1)", background: "white" }}>
+            <div style={{ height: "500px", display: "flex", flexDirection: "column" }}>
+              <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "18px", marginBottom: "20px", padding: "15px" }}>
                 {chat.length === 0 && (
-                  <div style={{ textAlign: "center", color: "var(--text-muted)", marginTop: "100px" }}>
-                    Ask anything about your studies!
+                  <div style={{ textAlign: "center", color: "var(--text-muted)", marginTop: "140px", display: "flex", flexDirection: "column", gap: "15px" }}>
+                    <span style={{ fontSize: "3rem" }}>💬</span>
+                    <span>Ask any question from your syllabus!</span>
                   </div>
                 )}
                 {chat.map((msg, i) => (
@@ -124,31 +185,34 @@ function AIAssistant({ syllabusText, summary, setSummary, chat, setChat, activeT
                     key={i} 
                     style={{ 
                       alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
-                      background: msg.role === "user" ? "var(--primary)" : "rgba(255,255,255,0.05)",
-                      padding: "12px 16px",
-                      borderRadius: msg.role === "user" ? "16px 16px 2px 16px" : "16px 16px 16px 2px",
-                      maxWidth: "80%",
-                      fontSize: "0.95rem"
+                      background: msg.role === "user" ? "var(--primary)" : "var(--primary-light)",
+                      color: msg.role === "user" ? "white" : "var(--text-main)",
+                      padding: "14px 20px",
+                      borderRadius: msg.role === "user" ? "20px 20px 4px 20px" : "20px 20px 20px 4px",
+                      maxWidth: "85%",
+                      fontSize: "1rem",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                      lineHeight: "1.5"
                     }}
                   >
-                    {msg.text}
+                    {msg.role === "ai" ? formatOutput(msg.text) : msg.text}
                   </div>
                 ))}
                 {loadingChat && (
-                  <div style={{ alignSelf: "flex-start", color: "var(--text-muted)", fontSize: "0.8rem" }}>
-                    AI is thinking...
+                  <div style={{ alignSelf: "flex-start", color: "var(--primary)", fontSize: "0.9rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "8px" }}>
+                    <div className="dot-pulse"></div> Thinking...
                   </div>
                 )}
               </div>
-              <form onSubmit={handleSendQuery} style={{ display: "flex", gap: "10px" }}>
+              <form onSubmit={handleSendQuery} style={{ display: "flex", gap: "12px", background: "var(--bg-main)", padding: "12px", borderRadius: "18px", border: "1px solid rgba(17, 94, 89, 0.1)" }}>
                 <input 
                   type="text" 
                   value={userQuery}
                   onChange={(e) => setUserQuery(e.target.value)}
-                  placeholder="Ask a doubt..."
-                  style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", padding: "12px" }}
+                  placeholder="Type your question here..."
+                  style={{ flex: 1, background: "transparent", border: "none", borderRadius: "0", padding: "8px", color: "var(--text-main)", fontSize: "1rem", outline: "none" }}
                 />
-                <button type="submit" className="btn-primary" style={{ padding: "0 20px" }} disabled={loadingChat}>
+                <button type="submit" className="btn-primary" style={{ padding: "0 24px", borderRadius: "12px", height: "45px" }} disabled={loadingChat}>
                   Send
                 </button>
               </form>
