@@ -217,47 +217,26 @@ def upload_syllabus():
 @app.route("/ai-assistant", methods=["POST"])
 def ai_assistant():
     data = request.json
-    task = data.get("task")  # summary, quiz, doubt
+    task = data.get("task")
     content = data.get("content")
 
     if task == "summary":
-        prompt = f"""
-        Extract the core academic topics and generate a study strategy from the syllabus below.
-
-        CRITICAL CONSTRAINTS:
-        - ONLY include academic subject topics.
-        - COMPLETELY IGNORE: total marks, weightage, credits, total hours, exam patterns, or timing information.
-        - Recommend the **Pomodoro Technique** for studying these topics:
-            1. Work for 25 minutes.
-            2. Take a 5-minute break.
-            3. After 4 sessions, take a longer 15-30 minute break.
-        - Use clear bullet points for the topics.
-
-        Syllabus Content:
-        {content[:3000]}
-        """
+        prompt = f"Summarize this syllabus:\n{content[:2000]}"
 
     elif task == "quiz":
         prompt = f"""
         Generate 5 multiple choice questions from this syllabus.
+        Provide 4 options labeled A, B, C, D.
+        Clearly mention the correct answer.
 
-        Requirements:
-        - 4 options (A, B, C, D)
-        - Provide correct answer
-        - Return JSON format only
-
-        {content[:3000]}
+        {content[:2000]}
         """
 
     elif task == "doubt":
-        prompt = f"""
-        Explain clearly and simply:
-
-        {content}
-        """
+        prompt = f"Explain clearly:\n{content}"
 
     else:
-        return {"success": False, "message": "Invalid task"}
+        return {"success": False}
 
     response = requests.post(
         "http://localhost:11434/api/generate",
@@ -269,9 +248,11 @@ def ai_assistant():
     )
 
     result = response.json()
-    output = result.get("response", "")
 
-    return {"success": True, "response": output}
+    return {
+        "success": True,
+        "response": result.get("response", "")
+    }
 
 if __name__ == "__main__":
     app.run(debug=True)

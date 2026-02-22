@@ -37,7 +37,7 @@ function AIAssistant({ syllabusText }) {
     setLoadingChat(true);
 
     try {
-      const res = await callAI("doubt", userQuery);
+      const res = await callAI("doubt", userQuery, syllabusText);
       setChat([...newChat, { role: "ai", text: res.response }]);
     } catch (err) {
       console.error(err);
