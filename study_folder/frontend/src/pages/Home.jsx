@@ -21,6 +21,13 @@ function Home({ onLogout }) {
   
   // State for AI features
   const [syllabusText, setSyllabusText] = useState("");
+  const [aiSummary, setAiSummary] = useState("");
+  const [aiChat, setAiChat] = useState([]);
+  const [aiActiveTab, setAiActiveTab] = useState("summary");
+
+  // State for Quiz features
+  const [quizData, setQuizData] = useState([]);
+  const [quizAnswers, setQuizAnswers] = useState({});
 
   // Global state to track running timer (Singleton pattern)
   const [activeTimerId, setActiveTimerId] = useState(null); 
@@ -108,8 +115,26 @@ function Home({ onLogout }) {
             onTimerComplete={handleTimerComplete}
           />
         )}
-        {page === "assistant" && <AIAssistant syllabusText={syllabusText} />}
-        {page === "quiz" && <Quiz syllabusText={syllabusText} />}
+        {page === "assistant" && (
+          <AIAssistant 
+            syllabusText={syllabusText} 
+            summary={aiSummary}
+            setSummary={setAiSummary}
+            chat={aiChat}
+            setChat={setAiChat}
+            activeTab={aiActiveTab}
+            setActiveTab={setAiActiveTab}
+          />
+        )}
+        {page === "quiz" && (
+          <Quiz 
+            syllabusText={syllabusText} 
+            quiz={quizData}
+            setQuiz={setQuizData}
+            answers={quizAnswers}
+            setAnswers={setQuizAnswers}
+          />
+        )}
         {page === "profile" && <Profile onLogout={onLogout} />}
       </main>
     </div>

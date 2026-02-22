@@ -2,11 +2,8 @@ import React, { useState } from "react";
 import Card from "../components/Card";
 import { callAI } from "../api/api";
 
-function AIAssistant({ syllabusText }) {
-  const [activeTab, setActiveTab] = useState("summary");
-  const [summary, setSummary] = useState("");
+function AIAssistant({ syllabusText, summary, setSummary, chat, setChat, activeTab, setActiveTab }) {
   const [loadingSummary, setLoadingSummary] = useState(false);
-  const [chat, setChat] = useState([]);
   const [userQuery, setUserQuery] = useState("");
   const [loadingChat, setLoadingChat] = useState(false);
 

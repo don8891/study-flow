@@ -2,10 +2,8 @@ import React, { useState } from "react";
 import Card from "../components/Card";
 import { callAI } from "../api/api";
 
-function Quiz({ syllabusText }) {
-  const [quiz, setQuiz] = useState([]);
+function Quiz({ syllabusText, quiz, setQuiz, answers, setAnswers }) {
   const [loading, setLoading] = useState(false);
-  const [answers, setAnswers] = useState({});
 
   async function handleGenerateQuiz() {
     if (!syllabusText) {
