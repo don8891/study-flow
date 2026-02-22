@@ -23,10 +23,18 @@ async function toggleTaskComplete(task, tasks, setTasks, activePlanId) {
 }
 
 
-function Dashboard({ goToUpload, activePlanId, setActivePlanId, setPage, activeTimerId, secondsLeft, startGlobalTimer }) {
+function Dashboard({ goToUpload, activePlanId, setActivePlanId, setPage, activeTimerId, secondsLeft, startGlobalTimer, onTimerComplete }) {
   const [tasks, setTasks] = useState([]);
   const [userData, setUserData] = useState(null);
   const [plans, setPlans] = useState([]);
+
+  const handleManualComplete = async (task) => {
+    // 1. Mark task as done locally and in Firestore (Dashboard logic)
+    await toggleTaskComplete(task, tasks, setTasks, activePlanId);
+    
+    // 2. Reset timer and log session (Home logic)
+    if (onTimerComplete) await onTimerComplete();
+  };
 
   useEffect(() => {
     fetchPlans();
@@ -215,7 +223,7 @@ function Dashboard({ goToUpload, activePlanId, setActivePlanId, setPage, activeT
                       <PomodoroTimer 
                         topic={todayTasks.filter(t => !t.completed)[0].topic}
                         duration={todayTasks.filter(t => !t.completed)[0].duration}
-                        onComplete={() => toggleTaskComplete(todayTasks.filter(t => !t.completed)[0], tasks, setTasks, activePlanId)}
+                        onComplete={() => handleManualComplete(todayTasks.filter(t => !t.completed)[0])}
                         completed={false}
                         timerId={`${todayTasks.filter(t => !t.completed)[0].date}-${todayTasks.filter(t => !t.completed)[0].startTime || 'slot1'}-${todayTasks.filter(t => !t.completed)[0].topic}`}
                         activeTimerId={activeTimerId}

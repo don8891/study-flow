@@ -10,9 +10,17 @@ import { getStudyPlan } from "../api/firestore";
 import { generateTasks } from "../utils/scheduler";
 
 
-function Planner({ activePlanId, activeTimerId, secondsLeft, startGlobalTimer }) {
+function Planner({ activePlanId, activeTimerId, secondsLeft, startGlobalTimer, onTimerComplete }) {
   const [tasks, setTasks] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
+
+  const handleManualComplete = async (task) => {
+    // 1. Mark task as done locally and in Firestore
+    await toggleTask(task);
+    
+    // 2. Reset timer and log session
+    if (onTimerComplete) await onTimerComplete();
+  };
 
   const [planData, setPlanData] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -240,7 +248,7 @@ function Planner({ activePlanId, activeTimerId, secondsLeft, startGlobalTimer })
                     <PomodoroTimer 
                       topic={task.topic} 
                       duration={task.duration}
-                      onComplete={() => toggleTask(task)} 
+                      onComplete={() => handleManualComplete(task)} 
                       completed={task.completed}
                       timerId={uniqueId}
                       activeTimerId={activeTimerId}

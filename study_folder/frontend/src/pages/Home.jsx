@@ -33,22 +33,10 @@ function Home({ onLogout }) {
     
     const uid = auth.currentUser?.uid;
     if (uid && activePlanId) {
-      // 1. Log session
+      // Log session
       const isBreak = timerTopic.toLowerCase().includes("break");
       const duration = parseInt(timerDuration);
       await logStudySession(uid, timerTopic, duration, isBreak ? "Break" : "Focus");
-
-      // 2. Mark task as done in the plan
-      const plan = await getStudyPlan(uid, activePlanId);
-      if (plan && plan.tasks) {
-        // Find the task using the activeTimerId (which matches uniqueId format: date-startTime-topic)
-        const updatedTasks = plan.tasks.map(t => {
-          const tId = `${t.date}-${t.startTime}-${t.topic}`;
-          return tId === activeTimerId ? { ...t, completed: true } : t;
-        });
-        await updatePlanTasks(uid, activePlanId, updatedTasks);
-        await recordActivity(uid);
-      }
     }
     
     setActiveTimerId(null);
@@ -62,8 +50,6 @@ function Home({ onLogout }) {
       interval = setInterval(() => {
         setSecondsLeft((prev) => prev - 1);
       }, 1000);
-    } else if (activeTimerId && secondsLeft === 0) {
-      handleTimerComplete();
     } else {
       clearInterval(interval);
     }
@@ -95,6 +81,7 @@ function Home({ onLogout }) {
             activeTimerId={activeTimerId}
             secondsLeft={secondsLeft}
             startGlobalTimer={startGlobalTimer}
+            onTimerComplete={handleTimerComplete}
           />
         )}
         {page === "upload" && (
@@ -115,9 +102,10 @@ function Home({ onLogout }) {
         {page === "calendar" && (
           <Planner 
             activePlanId={activePlanId} 
-            activeTimerId={activeTimerId}
-            secondsLeft={secondsLeft}
+            activeTimerId={activeTimerId} 
+            secondsLeft={secondsLeft} 
             startGlobalTimer={startGlobalTimer}
+            onTimerComplete={handleTimerComplete}
           />
         )}
         {page === "assistant" && <AIAssistant syllabusText={syllabusText} />}

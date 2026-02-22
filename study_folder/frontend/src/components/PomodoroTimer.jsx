@@ -65,10 +65,28 @@ function PomodoroTimer({ topic, duration, onComplete, completed, timerId, active
               Start
             </button>
           )}
-          {isActive && (
+          {isActive && secondsLeft > 0 && (
             <span style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 'bold' }}>
               Focusing...
             </span>
+          )}
+          {isActive && secondsLeft === 0 && (
+            <button 
+              onClick={(e) => { e.preventDefault(); onComplete(); }} 
+              style={{ 
+                padding: '6px 16px', 
+                fontSize: '0.8rem', 
+                borderRadius: '8px',
+                border: 'none',
+                background: 'var(--success-main, #10b981)',
+                color: 'white',
+                cursor: 'pointer',
+                fontWeight: '600',
+                boxShadow: '0 2px 4px rgba(16, 185, 129, 0.2)'
+              }}
+            >
+              Done
+            </button>
           )}
         </div>
       </div>
