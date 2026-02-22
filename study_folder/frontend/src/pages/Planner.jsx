@@ -1,11 +1,13 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
-import { format } from "date-fns";
-import { auth } from "../firebase";
-import { getStudyPlan, recordActivity, updatePlanTasks, logStudySession } from "../api/firestore";
+import { format, isSameDay, parseISO } from "date-fns";
 import Card from "../components/Card";
 import PomodoroTimer from "../components/PomodoroTimer";
+import { db, auth } from "../firebase";
+import { doc, updateDoc } from "firebase/firestore";
+import { getStudyPlan } from "../api/firestore";
+import { generateTasks } from "../utils/scheduler";
 
 
 function Planner({ activePlanId, activeTimerId, secondsLeft, startGlobalTimer }) {
@@ -13,16 +15,55 @@ function Planner({ activePlanId, activeTimerId, secondsLeft, startGlobalTimer })
   const [selectedDate, setSelectedDate] = useState(new Date());
 
   const [planData, setPlanData] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editHours, setEditHours] = useState(4);
+  const [editDate, setEditDate] = useState("");
 
   useEffect(() => {
-    const uid = auth.currentUser?.uid;
-    if (uid && activePlanId) {
-      getStudyPlan(uid, activePlanId).then(data => {
-        setPlanData(data);
-        setTasks(data?.tasks || []);
-      });
+    async function loadPlan() {
+      const uid = auth.currentUser?.uid;
+      if (uid && activePlanId) {
+        const plan = await getStudyPlan(uid, activePlanId);
+        if (plan) {
+          setTasks(plan.tasks || []);
+          setPlanData(plan);
+          setEditHours(plan.studyHours || 4);
+          setEditDate(plan.examDate || "");
+        }
+      }
     }
+    loadPlan();
   }, [activePlanId]);
+
+  async function handleReplan() {
+    const uid = auth.currentUser?.uid;
+    if (!uid || !activePlanId || !planData?.storedTopics) return;
+
+    const newTasks = generateTasks(
+      planData.storedTopics,
+      editDate,
+      editHours,
+      planData.studyPreference || "morning"
+    );
+
+    // Maintain completion status for identical topics
+    const updatedTasks = newTasks.map(newTask => {
+      const existing = tasks.find(t => t.topic === newTask.topic && t.completed);
+      return existing ? { ...newTask, completed: true } : newTask;
+    });
+
+    const planRef = doc(db, "users", uid, "studyPlans", activePlanId);
+    await updateDoc(planRef, {
+      tasks: updatedTasks,
+      studyHours: editHours,
+      examDate: editDate
+    });
+
+    setTasks(updatedTasks);
+    setPlanData({ ...planData, studyHours: editHours, examDate: editDate, tasks: updatedTasks });
+    setIsEditing(false);
+    alert("Plan updated successfully!");
+  }
 
   async function toggleTask(task) {
     const isNowCompleted = !task.completed;
@@ -55,7 +96,57 @@ function Planner({ activePlanId, activeTimerId, secondsLeft, startGlobalTimer })
 
   return (
     <div className="page" style={{ paddingBottom: '80px' }}>
-      <h1 style={{ color: "var(--primary)", marginBottom: "30px" }}>Study Planner</h1>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+        <h1 style={{ color: "var(--primary)", margin: 0 }}>Study Planner</h1>
+        <button 
+          onClick={() => setIsEditing(!isEditing)}
+          style={{ 
+            padding: "10px 20px", 
+            borderRadius: "12px", 
+            background: "rgba(255,255,255,0.05)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            color: "var(--text)",
+            fontSize: "0.9rem",
+            fontWeight: "bold",
+            cursor: "pointer"
+          }}
+        >
+          {isEditing ? "Cancel Edit" : "⚙️ Plan Settings"}
+        </button>
+      </div>
+
+      {isEditing && (
+        <Card title="Edit Plan Settings" style={{ marginBottom: "25px", border: "1px solid var(--primary)" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            <div>
+              <p style={{ marginBottom: "10px", fontSize: "0.9rem", color: "var(--text-muted)" }}>Target Exam Date</p>
+              <input 
+                type="date" 
+                value={editDate}
+                onChange={(e) => setEditDate(e.target.value)}
+                style={{ width: "100%", padding: "12px", borderRadius: "10px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)", color: "white" }}
+              />
+            </div>
+            <div>
+              <p style={{ marginBottom: "10px", fontSize: "0.9rem", color: "var(--text-muted)" }}>Daily Study Hours: <b>{editHours}h</b></p>
+              <input 
+                type="range" 
+                min="1" 
+                max="12" 
+                value={editHours}
+                onChange={(e) => setEditHours(parseInt(e.target.value))}
+                style={{ width: "100%", accentColor: "var(--primary)" }}
+              />
+            </div>
+            <button 
+              onClick={handleReplan}
+              style={{ width: "100%", padding: "14px", background: "var(--primary)", color: "white", borderRadius: "12px", fontWeight: "bold" }}
+            >
+              Update & Regenerate Plan
+            </button>
+          </div>
+        </Card>
+      )}
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1.5fr", gap: "24px" }}>
         {/* Calendar Side */}
@@ -69,10 +160,13 @@ function Planner({ activePlanId, activeTimerId, secondsLeft, startGlobalTimer })
                 minDetail="month"
                 prev2Label={null}
                 next2Label={null}
-                tileClassName={({ date }) => {
+                tileClassName={({ date, view }) => {
                   const dateString = format(date, "yyyy-MM-dd");
                   if (dateString === planData?.examDate) return "exam-tile";
-                  return groupedTasks[dateString] ? "study-tile" : null;
+                  if (view === 'month' && tasks.some(t => t.date === dateString)) {
+                    return 'study-tile';
+                  }
+                  return null;
                 }}
               />
             </div>

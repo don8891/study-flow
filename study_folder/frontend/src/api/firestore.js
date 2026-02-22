@@ -84,13 +84,16 @@ export async function getUserProfile(uid) {
 }
 
 /* Save study plan into sub-collection */
-export async function saveStudyPlan(uid, tasks, name, examDate) {
+export async function saveStudyPlan(uid, tasks, name, examDate, metadata = {}) {
   const planId = name.replace(/\s+/g, '-').toLowerCase(); // Slugify name
   const ref = doc(db, "users", uid, "studyPlans", planId);
   await setDoc(ref, {
     name,
     tasks,
     examDate,
+    storedTopics: metadata.topics || [],
+    studyHours: metadata.hours || 4,
+    studyPreference: metadata.preference || "morning",
     createdAt: new Date()
   });
   return planId;

@@ -4,6 +4,7 @@ import { uploadSyllabus } from "../api/api";
 import { auth } from "../firebase";
 import { differenceInCalendarDays, addDays, format } from "date-fns";
 import { saveStudyPlan } from "../api/firestore";
+import { generateTasks } from "../utils/scheduler";
 
 function Upload({ 
   file, setFile, 
@@ -46,79 +47,7 @@ function Upload({
         return;
       }
 
-      const tasks = [];
-      const studyDays = totalDays - 1; // Only 1 day for revision
-      const maxMinsPerDay = studyHours * 60;
-      
-      // Time tracking for real-time schedule
-      const startHour = studyPreference === "morning" ? 8 : 14; 
-      let currentStudyDate = new Date(today);
-      let currentTimePointer = new Date(currentStudyDate);
-      currentTimePointer.setHours(startHour, 0, 0, 0);
-      
-      let minsUsedToday = 0;
-      let taskCounter = 0;
-
-      res.topics.forEach((mainItem, topicIndex) => {
-        const itemsToSchedule = mainItem.subtopics.length > 0 
-          ? mainItem.subtopics 
-          : [mainItem.topic];
-
-        itemsToSchedule.forEach((subtopic, subIndex) => {
-          // If we exceed daily limit, move to next day
-          if (minsUsedToday + 30 > maxMinsPerDay) { // 25 min session + 5 min break buffer
-            currentStudyDate = addDays(currentStudyDate, 1);
-            currentTimePointer = new Date(currentStudyDate);
-            currentTimePointer.setHours(startHour, 0, 0, 0);
-            minsUsedToday = 0;
-            taskCounter = 0; // Reset counter for long break tracking
-          }
-
-          const dateStr = format(currentStudyDate, "yyyy-MM-dd");
-          taskCounter++;
-          
-          // Focus Session
-          const focusStart = format(currentTimePointer, "hh:mm a");
-          currentTimePointer.setMinutes(currentTimePointer.getMinutes() + 25);
-          const focusEnd = format(currentTimePointer, "hh:mm a");
-
-          tasks.push({
-            date: dateStr,
-            topic: subIndex === 0 && mainItem.subtopics.length > 0 
-              ? `${mainItem.topic}: ${subtopic}` 
-              : subtopic,
-            duration: "25",
-            completed: false,
-            type: "focus",
-            startTime: focusStart,
-            endTime: focusEnd,
-            preference: studyPreference
-          });
-
-          minsUsedToday += 25;
-
-          // Break
-          const isLongBreak = taskCounter % 4 === 0;
-          const breakDuration = isLongBreak ? 20 : 5;
-          
-          const breakStart = format(currentTimePointer, "hh:mm a");
-          currentTimePointer.setMinutes(currentTimePointer.getMinutes() + breakDuration);
-          const breakEnd = format(currentTimePointer, "hh:mm a");
-
-          tasks.push({
-            date: dateStr,
-            topic: isLongBreak ? "Long Break 🧘" : "Short Break ☕",
-            duration: breakDuration.toString(),
-            completed: false,
-            type: "break",
-            startTime: breakStart,
-            endTime: breakEnd,
-            preference: studyPreference
-          });
-
-          minsUsedToday += breakDuration;
-        });
-      });
+      const tasks = generateTasks(res.topics, examDate, studyHours, studyPreference);
 
       // Final Check: Validation for exam date
       const lastTaskDate = tasks.length > 0 ? new Date(tasks[tasks.length - 1].date) : today;
@@ -126,7 +55,11 @@ function Upload({
         setStatus("Warning: Syllabus is too large for these hours. Plan extends to exam date.");
       }
 
-      const planId = await saveStudyPlan(uid, tasks, syllabusName, examDate);
+      const planId = await saveStudyPlan(uid, tasks, syllabusName, examDate, {
+        topics: res.topics,
+        hours: studyHours,
+        preference: studyPreference
+      });
       setActivePlanId(planId);
       setStatus("Study plan created successfully!");
       
