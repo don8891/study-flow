@@ -216,6 +216,7 @@ def upload_syllabus():
 
 @app.route("/ai-assistant", methods=["POST"])
 def ai_assistant():
+    print("Received AI request")
     data = request.json
     task = data.get("task")
     content = data.get("content")
@@ -226,8 +227,14 @@ def ai_assistant():
     elif task == "quiz":
         prompt = f"""
         Generate 5 multiple choice questions from this syllabus.
-        Provide 4 options labeled A, B, C, D.
-        Clearly mention the correct answer.
+        Return ONLY a JSON array in this format:
+        [
+          {{
+            "question": "...",
+            "options": {{"A": "...", "B": "...", "C": "...", "D": "..."}},
+            "answer": "A"
+          }}
+        ]
 
         {content[:2000]}
         """
