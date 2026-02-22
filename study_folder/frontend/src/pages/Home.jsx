@@ -28,6 +28,7 @@ function Home({ onLogout }) {
   // State for Quiz features
   const [quizData, setQuizData] = useState([]);
   const [quizAnswers, setQuizAnswers] = useState({});
+  const [showQuizResult, setShowQuizResult] = useState(false);
 
   // Global state to track running timer (Singleton pattern)
   const [activeTimerId, setActiveTimerId] = useState(null); 
@@ -133,6 +134,8 @@ function Home({ onLogout }) {
             setQuiz={setQuizData}
             answers={quizAnswers}
             setAnswers={setQuizAnswers}
+            showResult={showQuizResult}
+            setShowResult={setShowQuizResult}
           />
         )}
         {page === "profile" && <Profile onLogout={onLogout} />}

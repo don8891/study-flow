@@ -244,7 +244,17 @@ def ai_assistant():
 
     elif task == "quiz":
         prompt = f"""
-        Generate 5 multiple choice questions from this syllabus.
+        Generate 5 high-quality, conceptual multiple choice questions based on the ACADEMIC CONTENT of this syllabus.
+        
+        SYLLABUS CONTENT:
+        {content[:2000]}
+        
+        STRICT CONSTRAINTS:
+        - DO NOT ask questions about the syllabus structure (e.g., "What is in Chapter 1?" or "Which unit covers X?").
+        - FOCUS ONLY on the actual subject matter, theories, facts, and concepts.
+        - Each question must test understanding of the topic itself.
+        - Provide 4 distinct options labeled A, B, C, D.
+
         Return ONLY a JSON array in this format:
         [
           {{
@@ -253,8 +263,6 @@ def ai_assistant():
             "answer": "A"
           }}
         ]
-
-        {content[:2000]}
         """
 
     elif task == "doubt":
