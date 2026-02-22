@@ -23,7 +23,7 @@ async function toggleTaskComplete(task, tasks, setTasks, activePlanId) {
 }
 
 
-function Dashboard({ goToUpload, activePlanId, setActivePlanId, setPage, activeTimerId, setActiveTimerId }) {
+function Dashboard({ goToUpload, activePlanId, setActivePlanId, setPage, activeTimerId, secondsLeft, startGlobalTimer }) {
   const [tasks, setTasks] = useState([]);
   const [userData, setUserData] = useState(null);
   const [plans, setPlans] = useState([]);
@@ -217,9 +217,10 @@ function Dashboard({ goToUpload, activePlanId, setActivePlanId, setPage, activeT
                         duration={todayTasks.filter(t => !t.completed)[0].duration}
                         onComplete={() => toggleTaskComplete(todayTasks.filter(t => !t.completed)[0], tasks, setTasks, activePlanId)}
                         completed={false}
-                        timerId={`${todayTasks.filter(t => !t.completed)[0].date}-${todayTasks.filter(t => !t.completed)[0].topic}`}
+                        timerId={`${todayTasks.filter(t => !t.completed)[0].date}-${todayTasks.filter(t => !t.completed)[0].startTime || 'slot1'}-${todayTasks.filter(t => !t.completed)[0].topic}`}
                         activeTimerId={activeTimerId}
-                        setActiveTimerId={setActiveTimerId}
+                        secondsLeft={secondsLeft}
+                        startGlobalTimer={startGlobalTimer}
                       />
                     </div>
                   </div>

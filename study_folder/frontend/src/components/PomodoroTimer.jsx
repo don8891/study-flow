@@ -2,53 +2,15 @@ import { useEffect, useState } from "react";
 import { auth } from "../firebase";
 import { logStudySession } from "../api/firestore";
 
-function PomodoroTimer({ topic, duration, onComplete, completed, timerId, activeTimerId, setActiveTimerId }) {
-  const [secondsLeft, setSecondsLeft] = useState(parseInt(duration) * 60 || 25 * 60);
-  const [isActive, setIsActive] = useState(false);
+function PomodoroTimer({ topic, duration, onComplete, completed, timerId, activeTimerId, secondsLeft, startGlobalTimer }) {
+  // Derive isActive from global activeTimerId
+  const isActive = activeTimerId === timerId;
 
-  // Sync with duration if topic changes
-  useEffect(() => {
-    setSecondsLeft(parseInt(duration) * 60 || 25 * 60);
-    // If this specific timer was running but the topic changed, reset it
-    if (isActive && activeTimerId === timerId) {
-      setIsActive(false);
-      setActiveTimerId(null);
-    }
-  }, [topic, duration]);
-
-  useEffect(() => {
-    let interval = null;
-    if (isActive && secondsLeft > 0) {
-      interval = setInterval(() => {
-        setSecondsLeft((prev) => prev - 1);
-      }, 1000);
-    } else if (secondsLeft === 0) {
-      handlePhaseEnd();
-    } else {
-      clearInterval(interval);
-    }
-    return () => clearInterval(interval);
-  }, [isActive, secondsLeft]);
-
-  const handlePhaseEnd = async () => {
-    setIsActive(false);
-    if (setActiveTimerId) setActiveTimerId(null);
-
-    const uid = auth.currentUser?.uid;
-    
-    // Determine type for logging
-    const isBreak = topic.toLowerCase().includes("break");
-    
-    if (uid) {
-      await logStudySession(uid, topic, parseInt(duration), isBreak ? "Break" : "Focus");
-    }
-
-    if (onComplete) onComplete(); 
-  };
+  // Use the global secondsLeft if this timer is active, otherwise show total duration
+  const displaySeconds = isActive ? secondsLeft : parseInt(duration) * 60;
 
   const startTimer = () => {
-    if (setActiveTimerId) setActiveTimerId(timerId);
-    setIsActive(true);
+    if (startGlobalTimer) startGlobalTimer(timerId, parseInt(duration), topic);
   };
 
   const formatTime = (s) => {
@@ -79,7 +41,7 @@ function PomodoroTimer({ topic, duration, onComplete, completed, timerId, active
             color: completed ? 'var(--text-muted)' : (isBreak ? 'var(--accent)' : 'var(--primary)'), 
             fontWeight: 'bold',
           }}>
-            {formatTime(secondsLeft)}
+            {formatTime(displaySeconds)}
           </span>
           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>
             {isBreak ? (topic.includes("Long") ? "Long Break" : "Short Break") : "Focus Time"}

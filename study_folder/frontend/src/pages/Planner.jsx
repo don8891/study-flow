@@ -8,7 +8,7 @@ import Card from "../components/Card";
 import PomodoroTimer from "../components/PomodoroTimer";
 
 
-function Planner({ activePlanId, activeTimerId, setActiveTimerId }) {
+function Planner({ activePlanId, activeTimerId, secondsLeft, startGlobalTimer }) {
   const [tasks, setTasks] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
 
@@ -111,48 +111,52 @@ function Planner({ activePlanId, activeTimerId, setActiveTimerId }) {
               </p>
             </Card>
           ) : (
-            tasksForDay.map((task, index) => (
-              <Card key={index} className="card-hover">
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                    <div style={{ 
-                      width: "14px", 
-                      height: "14px", 
-                      borderRadius: "50%", 
-                      background: task.completed ? "var(--success)" : "var(--accent)" 
-                    }} />
-                    <div style={{ display: "flex", flexDirection: "column" }}>
-                      <span style={{
-                        fontSize: '1.1rem',
-                        fontWeight: "700",
-                        textDecoration: task.completed ? "line-through" : "none",
-                        color: task.completed ? "var(--text-muted)" : "var(--text-main)",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px"
-                      }}>
-                        {task.preference === "morning" ? "☀️" : "🌅"} {task.topic}
-                      </span>
-                      <span style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "2px" }}>
-                        🕒 {task.startTime} - {task.endTime} ({task.duration} mins)
-                      </span>
+            tasksForDay.map((task, index) => {
+              const uniqueId = `${task.date}-${task.startTime || index}-${task.topic}`;
+              return (
+                <Card key={uniqueId} className="card-hover">
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                      <div style={{ 
+                        width: "14px", 
+                        height: "14px", 
+                        borderRadius: "50%", 
+                        background: task.completed ? "var(--success)" : "var(--accent)" 
+                      }} />
+                      <div style={{ display: "flex", flexDirection: "column" }}>
+                        <span style={{
+                          fontSize: '1.1rem',
+                          fontWeight: "700",
+                          textDecoration: task.completed ? "line-through" : "none",
+                          color: task.completed ? "var(--text-muted)" : "var(--text-main)",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px"
+                        }}>
+                          {task.preference === "morning" ? "☀️" : "🌅"} {task.topic}
+                        </span>
+                        <span style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "2px" }}>
+                          🕒 {task.startTime} - {task.endTime} ({task.duration} mins)
+                        </span>
+                      </div>
                     </div>
+                    {task.completed && <span style={{ color: "var(--success)", fontWeight: "bold", fontSize: "0.8rem" }}>✓ DONE</span>}
                   </div>
-                  {task.completed && <span style={{ color: "var(--success)", fontWeight: "bold", fontSize: "0.8rem" }}>✓ DONE</span>}
-                </div>
-                <div style={{ marginTop: "16px", padding: "12px", background: "var(--primary-light)", borderRadius: "12px" }}>
-                  <PomodoroTimer 
-                    topic={task.topic} 
-                    duration={task.duration}
-                    onComplete={() => toggleTask(task)} 
-                    completed={task.completed}
-                    timerId={`${task.date}-${task.topic}`}
-                    activeTimerId={activeTimerId}
-                    setActiveTimerId={setActiveTimerId}
-                  />
-                </div>
-              </Card>
-            ))
+                  <div style={{ marginTop: "16px", padding: "12px", background: "var(--primary-light)", borderRadius: "12px" }}>
+                    <PomodoroTimer 
+                      topic={task.topic} 
+                      duration={task.duration}
+                      onComplete={() => toggleTask(task)} 
+                      completed={task.completed}
+                      timerId={uniqueId}
+                      activeTimerId={activeTimerId}
+                      secondsLeft={secondsLeft}
+                      startGlobalTimer={startGlobalTimer}
+                    />
+                  </div>
+                </Card>
+              );
+            })
           )}
         </div>
       </div>
