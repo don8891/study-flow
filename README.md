@@ -56,13 +56,6 @@ npm install
 npm run dev -- --host
 ```
 
-### 4. Network Configuration
-
-To use the app on mobile devices:
-
-1. Find your local IP (e.g., `192.168.1.3`).
-2. Update `frontend/src/api/api.js` to point to `http://YOUR_IP:5000`.
-3. Open `http://YOUR_IP:5173` on your mobile browser.
 
 ## 🛡️ License
 
