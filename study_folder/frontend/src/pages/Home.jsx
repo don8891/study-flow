@@ -64,6 +64,20 @@ function Home({ onLogout }) {
     return () => clearInterval(interval);
   }, [activeTimerId, secondsLeft]);
 
+  // Load plan metadata into Home states when activePlanId changes
+  useEffect(() => {
+    const loadPlanDetails = async () => {
+      const uid = auth.currentUser?.uid;
+      if (uid && activePlanId) {
+        const plan = await getStudyPlan(uid, activePlanId);
+        if (plan && plan.syllabusText) {
+          setSyllabusText(plan.syllabusText);
+        }
+      }
+    };
+    loadPlanDetails();
+  }, [activePlanId]);
+
   const startGlobalTimer = (id, duration, topic) => {
     setActiveTimerId(id);
     setSecondsLeft(duration * 60);

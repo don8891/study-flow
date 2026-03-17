@@ -14,16 +14,34 @@ function Quiz({ syllabusText, quiz, setQuiz, answers, setAnswers, showResult, se
     setShowResult(false);
     try {
       const res = await callAI("quiz", syllabusText);
-      let jsonStr = res.response;
-      const jsonMatch = jsonStr.match(/\[.*\]/s);
-      if (jsonMatch) jsonStr = jsonMatch[0];
       
+      if (!res.success) {
+        throw new Error(res.message || "Failed to connect to AI server.");
+      }
+
+      let jsonStr = res.response;
+      if (!jsonStr) {
+        throw new Error("AI returned an empty response.");
+      }
+
+      const jsonMatch = jsonStr.match(/\[.*\]/s);
+      if (!jsonMatch) {
+        console.error("No JSON array found in AI response:", jsonStr);
+        throw new Error("AI response was not in the correct format. Try again.");
+      }
+
+      jsonStr = jsonMatch[0];
       const parsedQuiz = JSON.parse(jsonStr);
+      
+      if (!Array.isArray(parsedQuiz) || parsedQuiz.length === 0) {
+        throw new Error("AI did not generate any questions.");
+      }
+
       setQuiz(parsedQuiz);
       setAnswers({});
     } catch (err) {
-      console.error(err);
-      alert("Failed to generate quiz. Make sure Ollama is running llama3.");
+      console.error("Quiz Generation Error:", err);
+      alert(err.message.includes("Ollama") ? err.message : `Failed to generate quiz: ${err.message}`);
     } finally {
       setLoading(false);
     }

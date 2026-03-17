@@ -94,6 +94,7 @@ export async function saveStudyPlan(uid, tasks, name, examDate, metadata = {}) {
     storedTopics: metadata.topics || [],
     studyHours: metadata.hours || 4,
     studyPreference: metadata.preference || "morning",
+    syllabusText: metadata.syllabusText || "",
     createdAt: new Date()
   });
   return planId;

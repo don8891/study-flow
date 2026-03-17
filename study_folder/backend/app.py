@@ -72,33 +72,34 @@ def generate_structured_topics(text):
     {text[:4000]}
     """
 
-    try:
-        # Try local Ollama first (more reliable and better quality)
-        response = requests.post(
-            "http://localhost:11434/api/generate",
-            json={
-                "model": "llama3",
-                "prompt": prompt,
-                "stream": False
-            },
-            timeout=40
-        )
-        
-        if response.status_code == 200:
-            result = response.json()
-            generation = result.get("response", "")
-            
-            # Extract JSON from potential conversational filler
-            import re
-            json_match = re.search(r"\[.*\]", generation, re.DOTALL)
-            if json_match:
-                parsed = json.loads(json_match.group(0))
-                if isinstance(parsed, list) and len(parsed) > 0:
-                    print(f"DEBUG: AI extracted {len(parsed)} topics successfully.")
-                    return parsed
+    # Model priority: llama3 -> mistral
+    models = ["llama3:latest", "mistral:latest"]
 
-    except Exception as e:
-        print(f"DEBUG: AI extraction failed or timed out: {e}")
+    for model in models:
+        try:
+            print(f"DEBUG: Trying extraction with model: {model}")
+            response = requests.post(
+                "http://localhost:11434/api/generate",
+                json={
+                    "model": model,
+                    "prompt": prompt,
+                    "stream": False
+                },
+                timeout=180
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                generation = result.get("response", "")
+                
+                json_match = re.search(r"\[.*\]", generation, re.DOTALL)
+                if json_match:
+                    parsed = json.loads(json_match.group(0))
+                    if isinstance(parsed, list) and len(parsed) > 0:
+                        print(f"DEBUG: AI extracted {len(parsed)} topics successfully using {model}.")
+                        return parsed
+        except Exception as e:
+            print(f"DEBUG: Model {model} failed or timed out: {e}")
 
     # --- FALLBACK: Smart Local Extraction ---
     print("DEBUG: Using local heuristic extraction fallback.")
@@ -257,6 +258,7 @@ def ai_assistant():
     data = request.json
     task = data.get("task")
     content = data.get("content")
+    syllabus_context = data.get("syllabusContext", "")
 
     if task == "summary":
         prompt = f"""
@@ -304,44 +306,62 @@ def ai_assistant():
 
     elif task == "doubt":
         prompt = f"""
-        Explain the following concept clearly and professionally.
-        
-        CONCEPT/QUESTION:
+        CONTEXT FROM SYLLABUS:
+        {syllabus_context[:1500]}
+
+        EXPLAIN THIS CONCEPT:
         {content}
 
-        FORMATTING CONSTRAINTS:
+        INSTRUCTIONS:
+        - Explain the concept clearly and professionally.
         - Use ONLY '-' for bullet points.
         - Use **bold** for important terms.
         - Use __underline__ for key academic concepts.
-        - Remove any unnecessary conversational symbols like '+' or '*'.
+        - If the concept is not found in the syllabus context, provide a general accurate explanation but mention it's outside the provided syllabus.
         """
 
     else:
         return {"success": False}
 
-    try:
-        response = requests.post(
-            "http://localhost:11434/api/generate",
-            json={
-                "model": "llama3",
-                "prompt": prompt,
-                "stream": False
-            },
-            timeout=60  # Ollama local model can be slow
-        )
+    # Model priority: llama3 -> mistral
+    models = ["llama3:latest", "mistral:latest"]
+    
+    last_error = ""
 
-        if response.status_code != 200:
-            return {"success": False, "message": f"Ollama error: {response.status_code}"}
+    for model in models:
+        try:
+            print(f"DEBUG: Requesting {task} from model: {model}...")
+            response = requests.post(
+                "http://localhost:11434/api/generate",
+                json={
+                    "model": model,
+                    "prompt": prompt,
+                    "stream": False
+                },
+                timeout=180
+            )
 
-        result = response.json()
-        return {
-            "success": True,
-            "response": result.get("response", "")
-        }
-    except requests.exceptions.Timeout:
-        return {"success": False, "message": "Ollama timed out. Is it running?"}
-    except Exception as e:
-        return {"success": False, "message": str(e)}
+            if response.status_code == 200:
+                result = response.json()
+                generation = result.get("response", "")
+                if generation:
+                    print(f"DEBUG: Request successful using {model}.")
+                    return {
+                        "success": True,
+                        "response": generation
+                    }
+            else:
+                last_error = f"Ollama error {response.status_code} with {model}"
+                print(f"DEBUG: {last_error}")
+
+        except requests.exceptions.Timeout:
+            last_error = f"Ollama timed out while using {model}. CPU might be too slow."
+            print(f"DEBUG: {last_error}")
+        except Exception as e:
+            last_error = str(e)
+            print(f"DEBUG: Model {model} failed: {e}")
+
+    return {"success": False, "message": f"AI service failed. Last error: {last_error}. Please ensure Ollama is running."}
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')

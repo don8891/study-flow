@@ -60,7 +60,8 @@ function Upload({
           const planId = await saveStudyPlan(uid, tasks, syllabusName, examDate, {
             topics: res.topics,
             hours: studyHours,
-            preference: studyPreference
+            preference: studyPreference,
+            syllabusText: res.text
           });
           setActivePlanId(planId);
         } catch (dbErr) {
