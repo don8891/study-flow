@@ -82,9 +82,15 @@ def generate_structured_topics(text):
         response = requests.post(
             HF_API_URL,
             headers=headers,
-            json={"inputs": prompt}
+            json={"inputs": prompt},
+            timeout=30  # 30s timeout to prevent hanging
         )
         print(f"DEBUG: HF Status: {response.status_code}")
+
+        if response.status_code != 200:
+            print(f"DEBUG: HF API Error: {response.text}")
+            return ""
+
         result = response.json()
         print(f"DEBUG: HF Result: {result}")
 
@@ -100,10 +106,13 @@ def generate_structured_topics(text):
             if start_idx != -1 and end_idx != -1:
                 json_str = generated_text[start_idx:end_idx]
                 return json.loads(json_str)
-        except:
-            print("DEBUG: Could not parse AI response as JSON")
+        except Exception as e:
+            print(f"DEBUG: Could not parse AI response as JSON: {e}")
             
         return generated_text # Fallback to raw text if JSON fails
+    except requests.exceptions.Timeout:
+        print("DEBUG: Hugging Face API timed out")
+        return ""
     except Exception as e:
         print(f"DEBUG: HF Error: {str(e)}")
         return ""
@@ -282,21 +291,29 @@ def ai_assistant():
     else:
         return {"success": False}
 
-    response = requests.post(
-        "http://localhost:11434/api/generate",
-        json={
-            "model": "llama3",
-            "prompt": prompt,
-            "stream": False
+    try:
+        response = requests.post(
+            "http://localhost:11434/api/generate",
+            json={
+                "model": "llama3",
+                "prompt": prompt,
+                "stream": False
+            },
+            timeout=60  # Ollama local model can be slow
+        )
+
+        if response.status_code != 200:
+            return {"success": False, "message": f"Ollama error: {response.status_code}"}
+
+        result = response.json()
+        return {
+            "success": True,
+            "response": result.get("response", "")
         }
-    )
-
-    result = response.json()
-
-    return {
-        "success": True,
-        "response": result.get("response", "")
-    }
+    except requests.exceptions.Timeout:
+        return {"success": False, "message": "Ollama timed out. Is it running?"}
+    except Exception as e:
+        return {"success": False, "message": str(e)}
 
 if __name__ == "__main__":
     app.run(debug=True)

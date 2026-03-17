@@ -35,39 +35,44 @@ function Upload({
     const uid = auth.currentUser.uid;
     setStatus("Generating Your Plan...");
 
-    const res = await uploadSyllabus(file, uid);
+    try {
+      const res = await uploadSyllabus(file, uid);
 
-    if (res.success) {
-      setSyllabusText(res.text); // Save the extracted text for AI features
-      const topics = res.topics;
+      if (res.success) {
+        setSyllabusText(res.text); // Save the extracted text for AI features
+        const topics = res.topics;
 
-      if (topics.length === 0) {
-        alert("No clear topics were found. Please try a different file.");
-        setStatus("Generation failed - No topics found.");
-        return;
+        if (topics.length === 0) {
+          alert("No clear topics were found. Please try a different file.");
+          setStatus("Generation failed - No topics found.");
+          return;
+        }
+
+        const tasks = generateTasks(res.topics, examDate, studyHours, studyPreference);
+
+        // Final Check: Validation for exam date
+        const lastTaskDate = tasks.length > 0 ? new Date(tasks[tasks.length - 1].date) : today;
+        if (lastTaskDate >= exam) {
+          setStatus("Warning: Syllabus is too large for these hours. Plan extends to exam date.");
+        }
+
+        const planId = await saveStudyPlan(uid, tasks, syllabusName, examDate, {
+          topics: res.topics,
+          hours: studyHours,
+          preference: studyPreference
+        });
+        setActivePlanId(planId);
+        setStatus("Study plan created successfully!");
+        
+        setTimeout(() => {
+          setPage("calendar");
+        }, 1500);
+      } else {
+        setStatus("Upload failed: " + (res.message || "Unknown error"));
       }
-
-      const tasks = generateTasks(res.topics, examDate, studyHours, studyPreference);
-
-      // Final Check: Validation for exam date
-      const lastTaskDate = tasks.length > 0 ? new Date(tasks[tasks.length - 1].date) : today;
-      if (lastTaskDate >= exam) {
-        setStatus("Warning: Syllabus is too large for these hours. Plan extends to exam date.");
-      }
-
-      const planId = await saveStudyPlan(uid, tasks, syllabusName, examDate, {
-        topics: res.topics,
-        hours: studyHours,
-        preference: studyPreference
-      });
-      setActivePlanId(planId);
-      setStatus("Study plan created successfully!");
-      
-      setTimeout(() => {
-        setPage("calendar");
-      }, 1500);
-    } else {
-      setStatus("Upload failed");
+    } catch (error) {
+      console.error("Upload error:", error);
+      setStatus("Error: " + error.message);
     }
   }
 
