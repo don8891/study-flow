@@ -56,23 +56,33 @@ function Upload({
           setStatus("Warning: Syllabus is too large for these hours. Plan extends to exam date.");
         }
 
-        const planId = await saveStudyPlan(uid, tasks, syllabusName, examDate, {
-          topics: res.topics,
-          hours: studyHours,
-          preference: studyPreference
-        });
-        setActivePlanId(planId);
+        try {
+          const planId = await saveStudyPlan(uid, tasks, syllabusName, examDate, {
+            topics: res.topics,
+            hours: studyHours,
+            preference: studyPreference
+          });
+          setActivePlanId(planId);
+        } catch (dbErr) {
+          console.error("Database save failed:", dbErr);
+          setStatus("Plan generated, but failed to save to Dashboard. Check Firestore rules.");
+          return;
+        }
         setStatus("Study plan created successfully!");
         
         setTimeout(() => {
           setPage("calendar");
         }, 1500);
       } else {
-        setStatus("Upload failed: " + (res.message || "Unknown error"));
+        setStatus("Upload failed: " + (res.message || "Unknown backend error"));
       }
     } catch (error) {
-      console.error("Upload error:", error);
-      setStatus("Error: " + error.message);
+      console.error("Critical error during plan generation:", error);
+      if (error.message.includes("fetch")) {
+        setStatus("Error: Cannot connect to Backend. Please ensure python app.py is running.");
+      } else {
+        setStatus("Error: " + error.message);
+      }
     }
   }
 

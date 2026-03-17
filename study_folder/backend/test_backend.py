@@ -8,10 +8,6 @@ import json
 
 # Setup environment similar to app.py
 load_dotenv(override=True)
-HF_TOKEN = os.getenv("HF_TOKEN")
-print(f"DEBUG: Token found: {HF_TOKEN[:5] if HF_TOKEN else 'None'}...")
-HF_API_URL = "https://api-inference.huggingface.co/models/google/flan-t5-large"
-headers = {"Authorization": f"Bearer {HF_TOKEN}"}
 
 def clean_syllabus_text(text):
     lines = text.split("\n")
@@ -19,17 +15,41 @@ def clean_syllabus_text(text):
     for line in lines:
         line = line.strip()
         if len(line) < 5: continue
-        if any(char.isdigit() for char in line[:2]): line = line.lstrip("0123456789. ")
+        # Strip leading numbers/bullets
+        import re
+        line = re.sub(r"^[0-9.\-\s]+", "", line)
         cleaned.append(line)
     return "\n".join(cleaned)
 
 def generate_structured_topics(text):
-    prompt = f"Extract study topics from this syllabus: {text}"
-    response = requests.post(HF_API_URL, headers=headers, json={"inputs": prompt})
-    result = response.json()
-    print(f"Raw AI Result: {result}")
-    if isinstance(result, list) and len(result) > 0:
-        return result[0].get("generated_text", "")
+    print(f"DEBUG: Attempting AI extraction for topics (Text length: {len(text)})")
+    
+    prompt = f"""
+    Extract study topics from this syllabus text. 
+    Return ONLY a list of topics, one per line.
+    
+    Syllabus Content:
+    {text[:2000]}
+    """
+
+    try:
+        # Using local Ollama (Llama 3) just like in app.py
+        response = requests.post(
+            "http://localhost:11434/api/generate",
+            json={
+                "model": "llama3",
+                "prompt": prompt,
+                "stream": False
+            },
+            timeout=40
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            return result.get("response", "")
+    except Exception as e:
+        print(f"DEBUG: AI extraction failed: {e}")
+        
     return ""
 
 def test_extraction(filepath):

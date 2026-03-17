@@ -18,12 +18,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 # If Tesseract path is needed (Windows)
 pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
-HF_TOKEN = os.getenv("HF_TOKEN")
-HF_API_URL = "https://api-inference.huggingface.co/models/google/flan-t5-large"
-
-headers = {
-    "Authorization": f"Bearer {HF_TOKEN}"
-}
+# HF_TOKEN and HF_API_URL removed as syllabus extraction is now handled locally
 
 import re
 
@@ -59,63 +54,96 @@ def clean_syllabus_text(text):
 import json
 
 def generate_structured_topics(text):
-    print(f"DEBUG: Generating topics for text length: {len(text)}")
+    print(f"DEBUG: Attempting AI extraction for topics (Text length: {len(text)})")
+    
     prompt = f"""
-    Extract the core academic subject topics and their relevant sub-topics from the following syllabus.
+    Extract the core academic subject topics and their relevant sub-topics from the following syllabus text.
     Group sub-topics under their respective parent topics.
     
-    STRICT CATEGORICAL BAN:
-    - DO NOT include marks, credits, scores, hours, or exam timings.
-    - DO NOT include administrative instructions.
-    
-    FORMAT REQUIREMENT:
-    Return ONLY a valid JSON array of objects in this exact format:
-    [
-      {{ "topic": "Main Topic Name", "subtopics": ["Subtopic A", "Subtopic B"] }}
-    ]
+    STRICT RULES:
+    1. DO NOT include marks, credits, scores, or hours.
+    2. DO NOT include administrative instructions.
+    3. Return ONLY a valid JSON array of objects like this:
+       [
+         {{ "topic": "Main Topic", "subtopics": ["Sub A", "Sub B"] }}
+       ]
 
     Syllabus Content:
-    {text}
+    {text[:4000]}
     """
 
     try:
+        # Try local Ollama first (more reliable and better quality)
         response = requests.post(
-            HF_API_URL,
-            headers=headers,
-            json={"inputs": prompt},
-            timeout=30  # 30s timeout to prevent hanging
+            "http://localhost:11434/api/generate",
+            json={
+                "model": "llama3",
+                "prompt": prompt,
+                "stream": False
+            },
+            timeout=40
         )
-        print(f"DEBUG: HF Status: {response.status_code}")
-
-        if response.status_code != 200:
-            print(f"DEBUG: HF API Error: {response.text}")
-            return ""
-
-        result = response.json()
-        print(f"DEBUG: HF Result: {result}")
-
-        generated_text = ""
-        if isinstance(result, list) and len(result) > 0:
-            generated_text = result[0].get("generated_text", "")
         
-        # Try to extract JSON from the generated text
-        try:
-            # Look for the JSON array starting with [
-            start_idx = generated_text.find('[')
-            end_idx = generated_text.rfind(']') + 1
-            if start_idx != -1 and end_idx != -1:
-                json_str = generated_text[start_idx:end_idx]
-                return json.loads(json_str)
-        except Exception as e:
-            print(f"DEBUG: Could not parse AI response as JSON: {e}")
+        if response.status_code == 200:
+            result = response.json()
+            generation = result.get("response", "")
             
-        return generated_text # Fallback to raw text if JSON fails
-    except requests.exceptions.Timeout:
-        print("DEBUG: Hugging Face API timed out")
-        return ""
+            # Extract JSON from potential conversational filler
+            import re
+            json_match = re.search(r"\[.*\]", generation, re.DOTALL)
+            if json_match:
+                parsed = json.loads(json_match.group(0))
+                if isinstance(parsed, list) and len(parsed) > 0:
+                    print(f"DEBUG: AI extracted {len(parsed)} topics successfully.")
+                    return parsed
+
     except Exception as e:
-        print(f"DEBUG: HF Error: {str(e)}")
-        return ""
+        print(f"DEBUG: AI extraction failed or timed out: {e}")
+
+    # --- FALLBACK: Smart Local Extraction ---
+    print("DEBUG: Using local heuristic extraction fallback.")
+    raw_lines = [line.strip() for line in text.split("\n") if len(line.strip()) > 5]
+    
+    if not raw_lines:
+        return []
+    
+    structured = []
+    current_topic = ""
+    current_subtopics = []
+    has_started = False
+    
+    for line in raw_lines:
+        words = line.split()
+        is_short = len(words) <= 6
+        starts_with_cap = line[0].isupper() if line else False
+        
+        if is_short and starts_with_cap:
+            if has_started:
+                structured.append({
+                    "topic": current_topic,
+                    "subtopics": list(current_subtopics)
+                })
+            current_topic = line
+            current_subtopics = []
+            has_started = True
+        else:
+            if not has_started:
+                current_topic = "General Topics"
+                current_subtopics = [line]
+                has_started = True
+            else:
+                current_subtopics.append(line)
+    
+    if has_started:
+        structured.append({
+            "topic": current_topic,
+            "subtopics": list(current_subtopics)
+        })
+    
+    if len(structured) < 3 and len(raw_lines) > 3:
+        return [{"topic": line, "subtopics": []} for line in raw_lines]
+    
+    return structured
 
 
 # TEMPORARY in-memory store
@@ -316,4 +344,4 @@ def ai_assistant():
         return {"success": False, "message": str(e)}
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0')

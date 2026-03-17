@@ -85,7 +85,7 @@ export async function getUserProfile(uid) {
 
 /* Save study plan into sub-collection */
 export async function saveStudyPlan(uid, tasks, name, examDate, metadata = {}) {
-  const planId = name.replace(/\s+/g, '-').toLowerCase(); // Slugify name
+  const planId = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''); // Safe slugify
   const ref = doc(db, "users", uid, "studyPlans", planId);
   await setDoc(ref, {
     name,
