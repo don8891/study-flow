@@ -220,11 +220,11 @@ function Dashboard({ goToUpload, activePlanId, setActivePlanId, setPage, activeT
                         borderRadius: "20px", 
                         fontSize: "0.75rem", 
                         fontWeight: "bold",
-                        background: todayTasks.filter(t => !t.completed)[0].preference === "morning" ? "#fffbeb" : "#fff7ed",
-                        color: todayTasks.filter(t => !t.completed)[0].preference === "morning" ? "#b45309" : "#c2410c",
+                        background: "#fffbeb",
+                        color: "#b45309",
                         border: "1px solid currentColor"
                       }}>
-                        {todayTasks.filter(t => !t.completed)[0].preference === "morning" ? "☀️ MORNING SESSION" : "🌅 AFTERNOON SESSION"}
+                        🎯 UPCOMING SESSION
                       </div>
                       <div style={{ fontSize: "0.85rem", fontWeight: "bold", color: "var(--primary)" }}>
                         🕒 {todayTasks.filter(t => !t.completed)[0].startTime} - {todayTasks.filter(t => !t.completed)[0].endTime}
@@ -276,7 +276,7 @@ function Dashboard({ goToUpload, activePlanId, setActivePlanId, setPage, activeT
                     }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <span style={{ fontSize: "1.1rem" }}>{task.preference === "morning" ? "☀️" : "🌅"}</span>
+                          <span style={{ fontSize: "1.1rem" }}>{task.type === 'break' ? '☕' : '📚'}</span>
                           <span style={{ 
                             fontWeight: "600", 
                             textDecoration: task.completed ? "line-through" : "none",

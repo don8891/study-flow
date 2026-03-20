@@ -45,6 +45,7 @@ function Planner({ activePlanId, activeTimerId, secondsLeft, startGlobalTimer, o
   const [isEditing, setIsEditing] = useState(false);
   const [editHours, setEditHours] = useState(4);
   const [editDate, setEditDate] = useState("");
+  const [editStartTime, setEditStartTime] = useState("09:00");
 
   useEffect(() => {
     async function loadPlan() {
@@ -56,6 +57,7 @@ function Planner({ activePlanId, activeTimerId, secondsLeft, startGlobalTimer, o
           setPlanData(plan);
           setEditHours(plan.studyHours || 4);
           setEditDate(plan.examDate || "");
+          setEditStartTime(plan.studyPreference || "09:00");
         }
       }
     }
@@ -70,7 +72,7 @@ function Planner({ activePlanId, activeTimerId, secondsLeft, startGlobalTimer, o
       planData.storedTopics,
       editDate,
       editHours,
-      planData.studyPreference || "morning"
+      editStartTime
     );
 
     // Maintain completion status for identical topics
@@ -83,11 +85,12 @@ function Planner({ activePlanId, activeTimerId, secondsLeft, startGlobalTimer, o
     await updateDoc(planRef, {
       tasks: updatedTasks,
       studyHours: editHours,
-      examDate: editDate
+      examDate: editDate,
+      studyPreference: editStartTime
     });
 
     setTasks(updatedTasks);
-    setPlanData({ ...planData, studyHours: editHours, examDate: editDate, tasks: updatedTasks });
+    setPlanData({ ...planData, studyHours: editHours, examDate: editDate, studyPreference: editStartTime, tasks: updatedTasks });
     setIsEditing(false);
     alert("Plan updated successfully!");
   }
@@ -163,6 +166,15 @@ function Planner({ activePlanId, activeTimerId, secondsLeft, startGlobalTimer, o
                 value={editHours}
                 onChange={(e) => setEditHours(parseInt(e.target.value))}
                 style={{ width: "100%", accentColor: "var(--primary)" }}
+              />
+            </div>
+            <div>
+              <p style={{ marginBottom: "10px", fontSize: "0.9rem", color: "var(--text-muted)" }}>Starting Time</p>
+              <input 
+                type="time" 
+                value={editStartTime}
+                onChange={(e) => setEditStartTime(e.target.value)}
+                style={{ width: "100%", padding: "12px", borderRadius: "10px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)", color: "white" }}
               />
             </div>
             <button 
@@ -254,7 +266,7 @@ function Planner({ activePlanId, activeTimerId, secondsLeft, startGlobalTimer, o
                           alignItems: "center",
                           gap: "8px"
                         }}>
-                          {task.preference === "morning" ? "☀️" : "🌅"} {task.topic}
+                          {task.type === 'break' ? '☕' : '📚'} {task.topic}
                         </span>
                         <span style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "2px" }}>
                           🕒 {task.startTime} - {task.endTime} ({task.duration} mins)

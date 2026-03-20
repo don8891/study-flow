@@ -14,7 +14,7 @@ function Upload({
   setPage, setActivePlanId,
   setSyllabusText
 }) {
-  const [studyPreference, setStudyPreference] = React.useState("morning");
+  const [startTime, setStartTime] = React.useState("09:00");
   const [studyHours, setStudyHours] = React.useState(4);
 
   async function handleUpload() {
@@ -48,7 +48,7 @@ function Upload({
           return;
         }
 
-        const tasks = generateTasks(res.topics, examDate, studyHours, studyPreference);
+        const tasks = generateTasks(res.topics, examDate, studyHours, startTime);
 
         // Final Check: Validation for exam date
         const lastTaskDate = tasks.length > 0 ? new Date(tasks[tasks.length - 1].date) : today;
@@ -60,7 +60,7 @@ function Upload({
           const planId = await saveStudyPlan(uid, tasks, syllabusName, examDate, {
             topics: res.topics,
             hours: studyHours,
-            preference: studyPreference,
+            preference: startTime,
             syllabusText: res.text
           });
           setActivePlanId(planId);
@@ -148,51 +148,15 @@ function Upload({
         </div>
       </Card>
 
-      <Card title="Study Preference">
-        <p style={{ marginBottom: "15px", fontSize: "0.9rem" }}>When are you most comfortable studying?</p>
-        <div style={{ display: "flex", gap: "10px" }}>
-          <button 
-            onClick={() => setStudyPreference("morning")}
-            style={{ 
-              flex: 1, 
-              padding: "16px", 
-              background: studyPreference === "morning" ? "var(--primary)" : "rgba(255,255,255,0.05)",
-              color: studyPreference === "morning" ? "white" : "var(--text)",
-              border: "none",
-              borderRadius: "16px",
-              cursor: "pointer",
-              fontWeight: "bold",
-              transition: "all 0.2s ease",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: "8px"
-            }}
-          >
-            <span style={{ fontSize: "1.5rem" }}>☀️</span>
-            <span>Morning (Starts 8 AM)</span>
-          </button>
-          <button 
-            onClick={() => setStudyPreference("afternoon")}
-            style={{ 
-              flex: 1, 
-              padding: "16px", 
-              background: studyPreference === "afternoon" ? "var(--primary)" : "rgba(255,255,255,0.05)",
-              color: studyPreference === "afternoon" ? "white" : "var(--text)",
-              border: "none",
-              borderRadius: "16px",
-              cursor: "pointer",
-              fontWeight: "bold",
-              transition: "all 0.2s ease",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: "8px"
-            }}
-          >
-            <span style={{ fontSize: "1.5rem" }}>🌅</span>
-            <span>Afternoon (Starts 2 PM)</span>
-          </button>
+      <Card title="Starting Time">
+        <p style={{ marginBottom: "15px", fontSize: "0.9rem" }}>When would you like to start your daily study sessions?</p>
+        <div className="input-group">
+          <input 
+            type="time" 
+            value={startTime}
+            onChange={(e) => setStartTime(e.target.value)}
+            style={{ width: "100%", padding: "12px", fontSize: "1rem", borderRadius: "10px", border: "1px solid var(--border)" }}
+          />
         </div>
       </Card>
 
