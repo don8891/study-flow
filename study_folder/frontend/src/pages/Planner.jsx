@@ -248,7 +248,7 @@ function Planner({ activePlanId, activeTimerId, secondsLeft, startGlobalTimer, o
               const uniqueId = `${task.date}-${task.startTime || index}-${task.topic}`;
               return (
                 <Card key={uniqueId} className="card-hover">
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                       <div style={{ 
                         width: "14px", 
@@ -273,19 +273,24 @@ function Planner({ activePlanId, activeTimerId, secondsLeft, startGlobalTimer, o
                         </span>
                       </div>
                     </div>
-                    {task.completed && <span style={{ color: "var(--success)", fontWeight: "bold", fontSize: "0.8rem" }}>✓ DONE</span>}
-                  </div>
-                  <div style={{ marginTop: "16px", padding: "12px", background: "var(--primary-light)", borderRadius: "12px" }}>
-                    <PomodoroTimer 
-                      topic={task.topic} 
-                      duration={task.duration}
-                      onComplete={() => handleManualComplete(task)} 
-                      completed={task.completed}
-                      timerId={uniqueId}
-                      activeTimerId={activeTimerId}
-                      secondsLeft={secondsLeft}
-                      startGlobalTimer={startGlobalTimer}
-                    />
+                    
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                      {!task.completed ? (
+                        <PomodoroTimer 
+                          topic={task.topic} 
+                          duration={task.duration}
+                          onComplete={() => handleManualComplete(task)} 
+                          completed={task.completed}
+                          timerId={uniqueId}
+                          activeTimerId={activeTimerId}
+                          secondsLeft={secondsLeft}
+                          startGlobalTimer={startGlobalTimer}
+                          variant="inline"
+                        />
+                      ) : (
+                        <span style={{ color: "var(--success)", fontWeight: "bold", fontSize: "0.8rem" }}>✓ DONE</span>
+                      )}
+                    </div>
                   </div>
                 </Card>
               );

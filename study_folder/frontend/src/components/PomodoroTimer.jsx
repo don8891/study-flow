@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { auth } from "../firebase";
 import { logStudySession } from "../api/firestore";
 
-function PomodoroTimer({ topic, duration, onComplete, completed, timerId, activeTimerId, secondsLeft, startGlobalTimer }) {
+function PomodoroTimer({ topic, duration, onComplete, completed, timerId, activeTimerId, secondsLeft, startGlobalTimer, variant = "block" }) {
   // Derive isActive from global activeTimerId
   const isActive = activeTimerId === timerId;
 
@@ -27,6 +27,41 @@ function PomodoroTimer({ topic, duration, onComplete, completed, timerId, active
       onComplete();
     }
   }, [isActive, secondsLeft, onComplete]);
+
+  if (variant === "inline") {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <span style={{ 
+          fontFamily: 'monospace', 
+          fontSize: '1.2rem', 
+          color: completed ? 'var(--text-muted)' : (isBreak ? 'var(--accent)' : 'var(--primary)'), 
+          fontWeight: 'bold',
+        }}>
+          {formatTime(displaySeconds)}
+        </span>
+        
+        {!completed && (
+          <button 
+            className={`timer-start-btn ${isActive ? 'active' : ''}`}
+            onClick={(e) => { e.preventDefault(); startTimer(); }} 
+            style={{ 
+              padding: '6px 14px', 
+              fontSize: '0.8rem', 
+              borderRadius: '8px',
+              border: isActive ? '1px solid var(--primary)' : 'none',
+              background: isActive ? 'transparent' : 'var(--primary)',
+              color: isActive ? 'var(--primary)' : 'white',
+              cursor: isActive ? 'default' : 'pointer',
+              fontWeight: '600',
+            }}
+            disabled={isActive}
+          >
+            {isActive ? "Focusing..." : "Start"}
+          </button>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div style={{ marginTop: '10px' }}>

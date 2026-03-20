@@ -57,15 +57,17 @@ def generate_structured_topics(text):
     print(f"DEBUG: Attempting AI extraction for topics (Text length: {len(text)})")
     
     prompt = f"""
-    Extract the core academic subject topics and their relevant sub-topics from the following syllabus text.
+    Extract ONLY the core academic subject topics and their relevant sub-topics from the following syllabus text.
+    You must intelligently summarize or shorten the topics to be concise.
     Group sub-topics under their respective parent topics.
     
     STRICT RULES:
-    1. DO NOT include marks, credits, scores, or hours.
-    2. DO NOT include administrative instructions.
-    3. Return ONLY a valid JSON array of objects like this:
+    1. EXTRACT CONCISE TOPICS ONLY: Do NOT output full sentences, paragraphs, or descriptions. A topic should be 2-6 words maximum.
+    2. DO NOT include marks, credits, scores, or physical hours/durations.
+    3. DO NOT include administrative instructions, pre-requisites, or objectives.
+    4. Return ONLY a valid JSON array of objects like this:
        [
-         {{ "topic": "Main Topic", "subtopics": ["Sub A", "Sub B"] }}
+         {{ "topic": "Concise Main Topic", "subtopics": ["Short Subtopic A", "Short Subtopic B"] }}
        ]
 
     Syllabus Content:
@@ -115,9 +117,18 @@ def generate_structured_topics(text):
     
     for line in raw_lines:
         words = line.split()
+        # Skip sentences or paragraphs
+        if len(words) > 10:
+            continue
+            
         is_short = len(words) <= 6
         starts_with_cap = line[0].isupper() if line else False
         
+        # Simple heuristic to clean out junk punctuation at start
+        line = re.sub(r"^[^a-zA-Z0-9]+", "", line).strip()
+        if not line:
+            continue
+            
         if is_short and starts_with_cap:
             if has_started:
                 structured.append({
@@ -142,7 +153,8 @@ def generate_structured_topics(text):
         })
     
     if len(structured) < 3 and len(raw_lines) > 3:
-        return [{"topic": line, "subtopics": []} for line in raw_lines]
+        short_lines = [line for line in raw_lines if len(line.split()) <= 10]
+        return [{"topic": line, "subtopics": []} for line in short_lines]
     
     return structured
 
@@ -214,10 +226,10 @@ def upload_syllabus():
         # AI returned structured JSON
         for item in topics_raw:
             main_topic = item.get("topic", "").strip()
-            if main_topic and not any(f in main_topic.lower() for f in forbidden):
+            if main_topic and len(main_topic.split()) <= 10 and not any(f in main_topic.lower() for f in forbidden):
                 subtopics = [
                     s.strip() for s in item.get("subtopics", [])
-                    if s.strip() and not any(f in s.lower() for f in forbidden)
+                    if s.strip() and len(s.split()) <= 10 and not any(f in s.lower() for f in forbidden)
                 ]
                 final_topics.append({
                     "topic": main_topic,
@@ -239,7 +251,7 @@ def upload_syllabus():
         # Filter flat list
         filtered_lines = [
             t for t in raw_lines 
-            if not any(f in t.lower() for f in forbidden)
+            if len(t.split()) <= 10 and not any(f in t.lower() for f in forbidden)
         ]
 
         # Convert flat list to structured format for frontend consistency

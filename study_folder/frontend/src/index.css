@@ -397,3 +397,18 @@ button:active {
   font-size: 0.9rem;
   z-index: 2;
 }
+
+/* Custom In-line Timer Hover Button */
+.card-hover .timer-start-btn {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  transform: translateX(10px);
+}
+
+.card-hover:hover .timer-start-btn,
+.card-hover .timer-start-btn.active {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
+}
