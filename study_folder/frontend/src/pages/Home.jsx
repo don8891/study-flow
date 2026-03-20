@@ -36,19 +36,27 @@ function Home({ onLogout }) {
   const [timerTopic, setTimerTopic] = useState("");
   const [timerDuration, setTimerDuration] = useState(0);
 
-  const handleTimerComplete = async () => {
-    if (!activeTimerId) return;
-    
+  const handleTimerComplete = async (manualTopic = null, manualDuration = null) => {
     const uid = auth.currentUser?.uid;
-    if (uid && activePlanId) {
+    if (!uid) return;
+
+    const topic = manualTopic || timerTopic;
+    const duration = manualDuration || parseInt(timerDuration);
+
+    if (topic && activePlanId) {
       // Log session
-      const isBreak = timerTopic.toLowerCase().includes("break");
-      const duration = parseInt(timerDuration);
-      await logStudySession(uid, timerTopic, duration, isBreak ? "Break" : "Focus");
+      const isBreak = topic.toLowerCase().includes("break");
+      await logStudySession(uid, topic, duration, isBreak ? "Break" : "Focus");
+      
+      // Update XP for manual/auto completion
+      await recordActivity(uid);
     }
     
+    // Clear timer state
     setActiveTimerId(null);
     setSecondsLeft(0);
+    setTimerTopic("");
+    setTimerDuration(0);
   };
 
   // Background timer interval

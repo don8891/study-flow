@@ -20,7 +20,13 @@ function PomodoroTimer({ topic, duration, onComplete, completed, timerId, active
   };
 
   const isBreak = topic.toLowerCase().includes("break");
-  const isOtherTimerRunning = activeTimerId && activeTimerId !== timerId;
+
+  // Auto-complete when timer hits zero
+  useEffect(() => {
+    if (isActive && secondsLeft === 0) {
+      onComplete();
+    }
+  }, [isActive, secondsLeft, onComplete]);
 
   return (
     <div style={{ marginTop: '10px' }}>
@@ -46,46 +52,24 @@ function PomodoroTimer({ topic, duration, onComplete, completed, timerId, active
           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>
             {isBreak ? (topic.includes("Long") ? "Long Break" : "Short Break") : "Focus Time"}
           </span>
-          {!completed && !isActive && (
+          
+          {!completed && (
             <button 
               onClick={(e) => { e.preventDefault(); startTimer(); }} 
-              disabled={isOtherTimerRunning}
               style={{ 
                 padding: '6px 16px', 
                 fontSize: '0.8rem', 
                 borderRadius: '8px',
                 border: 'none',
-                background: isOtherTimerRunning ? 'var(--text-muted)' : 'var(--primary)',
-                color: 'white',
-                cursor: isOtherTimerRunning ? 'not-allowed' : 'pointer',
+                background: isActive ? 'transparent' : 'var(--primary)',
+                border: isActive ? '1px solid var(--primary)' : 'none',
+                color: isActive ? 'var(--primary)' : 'white',
+                cursor: isActive ? 'default' : 'pointer',
                 fontWeight: '600',
-                opacity: isOtherTimerRunning ? 0.5 : 1
               }}
+              disabled={isActive}
             >
-              Start
-            </button>
-          )}
-          {isActive && secondsLeft > 0 && (
-            <span style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 'bold' }}>
-              Focusing...
-            </span>
-          )}
-          {isActive && secondsLeft === 0 && (
-            <button 
-              onClick={(e) => { e.preventDefault(); onComplete(); }} 
-              style={{ 
-                padding: '6px 16px', 
-                fontSize: '0.8rem', 
-                borderRadius: '8px',
-                border: 'none',
-                background: 'var(--success-main, #10b981)',
-                color: 'white',
-                cursor: 'pointer',
-                fontWeight: '600',
-                boxShadow: '0 2px 4px rgba(16, 185, 129, 0.2)'
-              }}
-            >
-              Done
+              {isActive ? "Focusing..." : "Start"}
             </button>
           )}
         </div>

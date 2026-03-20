@@ -139,3 +139,11 @@ export async function logStudySession(uid, topic, duration, type, metadata = {})
     timestamp: new Date()
   });
 }
+
+/* Get study history for a user */
+export async function getStudySessions(uid) {
+  const ref = collection(db, "users", uid, "studySessions");
+  const q = query(ref, orderBy("timestamp", "desc"));
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}

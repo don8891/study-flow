@@ -6,7 +6,7 @@ import Card from "../components/Card";
 import PomodoroTimer from "../components/PomodoroTimer";
 import { db, auth } from "../firebase";
 import { doc, updateDoc } from "firebase/firestore";
-import { getStudyPlan } from "../api/firestore";
+import { getStudyPlan, updatePlanTasks, recordActivity } from "../api/firestore";
 import { generateTasks } from "../utils/scheduler";
 
 
@@ -16,10 +16,29 @@ function Planner({ activePlanId, activeTimerId, secondsLeft, startGlobalTimer, o
 
   const handleManualComplete = async (task) => {
     // 1. Mark task as done locally and in Firestore
-    await toggleTask(task);
+    const updatedTasks = tasks.map(t =>
+      t.date === task.date && t.topic === task.topic && t.startTime === task.startTime
+        ? { ...t, completed: true }
+        : t
+    );
+    setTasks(updatedTasks);
     
-    // 2. Reset timer and log session
-    if (onTimerComplete) await onTimerComplete();
+    const uid = auth.currentUser?.uid;
+    if (uid && activePlanId) {
+      await updatePlanTasks(uid, activePlanId, updatedTasks);
+    }
+    
+    // 2. Auto-start logic for breaks
+    const taskIndex = tasks.findIndex(t => t.date === task.date && t.topic === task.topic && t.startTime === task.startTime);
+    const nextTask = tasks[taskIndex + 1];
+
+    if (nextTask && (nextTask.topic.toLowerCase().includes("break") || nextTask.type === "break")) {
+      const uniqueId = `${nextTask.date}-${nextTask.startTime || 'slot'}-${nextTask.topic}`;
+      startGlobalTimer(uniqueId, parseInt(nextTask.duration), nextTask.topic);
+    } else {
+      // 3. Reset timer and log session
+      if (onTimerComplete) await onTimerComplete(task.topic, task.duration);
+    }
   };
 
   const [planData, setPlanData] = useState(null);
@@ -76,7 +95,7 @@ function Planner({ activePlanId, activeTimerId, secondsLeft, startGlobalTimer, o
   async function toggleTask(task) {
     const isNowCompleted = !task.completed;
     const updatedTasks = tasks.map(t =>
-      t.date === task.date && t.topic === task.topic
+      t.date === task.date && t.topic === task.topic && t.startTime === task.startTime
         ? { ...t, completed: isNowCompleted }
         : t
     );
@@ -86,9 +105,9 @@ function Planner({ activePlanId, activeTimerId, secondsLeft, startGlobalTimer, o
     if (uid && activePlanId) {
       await updatePlanTasks(uid, activePlanId, updatedTasks);
 
-      // If user marks a task as completed today, record activity for streak
-      if (isNowCompleted) {
-        await recordActivity(uid);
+      // Log session and record activity if marked as completed
+      if (isNowCompleted && onTimerComplete) {
+        await onTimerComplete(task.topic, task.duration);
       }
     }
   }

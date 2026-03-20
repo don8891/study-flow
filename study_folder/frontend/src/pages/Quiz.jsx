@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import Card from "../components/Card";
 import { callAI } from "../api/api";
+import { auth } from "../firebase";
+import { logStudySession, recordActivity } from "../api/firestore";
 
 function Quiz({ syllabusText, quiz, setQuiz, answers, setAnswers, showResult, setShowResult }) {
   const [loading, setLoading] = useState(false);
@@ -196,7 +198,16 @@ function Quiz({ syllabusText, quiz, setQuiz, answers, setAnswers, showResult, se
           ))}
           <button 
             className="btn-primary" 
-            onClick={() => setShowResult(true)}
+            onClick={async () => {
+              setShowResult(true);
+              const uid = auth.currentUser?.uid;
+              if (uid) {
+                // Award 20 XP for quiz completion
+                await recordActivity(uid); 
+                await recordActivity(uid); // Simple way to give 20XP (10+10)
+                await logStudySession(uid, "AI Quiz Master", quiz.length, "Quiz", { score, percentage });
+              }
+            }}
             style={{ marginTop: "20px", padding: "16px", borderRadius: "14px", fontSize: "1.1rem", fontWeight: "800", background: "var(--primary)" }}
             disabled={Object.keys(answers).length < quiz.length}
           >

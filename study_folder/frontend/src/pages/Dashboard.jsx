@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { auth } from "../firebase";
-import { getStudyPlan, getUserProfile, getStudyPlansList, deleteStudyPlan, updatePlanTasks, recordActivity } from "../api/firestore";
+import { getStudyPlan, getUserProfile, getStudyPlansList, deleteStudyPlan, updatePlanTasks, recordActivity, getStudySessions } from "../api/firestore";
 import Card from "../components/Card";
 import PomodoroTimer from "../components/PomodoroTimer";
 
 async function toggleTaskComplete(task, tasks, setTasks, activePlanId) {
   const isNowCompleted = true; // Only marking as completed via timer
   const updatedTasks = tasks.map(t =>
-    t.date === task.date && t.topic === task.topic
+    t.date === task.date && t.topic === task.topic && t.startTime === task.startTime
       ? { ...t, completed: isNowCompleted }
       : t
   );
@@ -17,8 +17,6 @@ async function toggleTaskComplete(task, tasks, setTasks, activePlanId) {
   const uid = auth.currentUser?.uid;
   if (uid && activePlanId) {
     await updatePlanTasks(uid, activePlanId, updatedTasks);
-    // XP and Streak are handled within recordActivity (which now increments XP by 10)
-    await recordActivity(uid);
   }
 }
 
@@ -27,19 +25,33 @@ function Dashboard({ goToUpload, activePlanId, setActivePlanId, setPage, activeT
   const [tasks, setTasks] = useState([]);
   const [userData, setUserData] = useState(null);
   const [plans, setPlans] = useState([]);
+  const [history, setHistory] = useState([]);
 
   const handleManualComplete = async (task) => {
     // 1. Mark task as done locally and in Firestore (Dashboard logic)
     await toggleTaskComplete(task, tasks, setTasks, activePlanId);
     
-    // 2. Reset timer and log session (Home logic)
-    if (onTimerComplete) await onTimerComplete();
+    // 2. Find next task for auto-start logic
+    const taskIndex = tasks.findIndex(t => t.date === task.date && t.topic === task.topic && t.startTime === task.startTime);
+    const nextTask = tasks[taskIndex + 1];
+
+    if (nextTask && (nextTask.topic.toLowerCase().includes("break") || nextTask.type === "break")) {
+      // Auto-start next session if it's a break
+      const uniqueId = `${nextTask.date}-${nextTask.startTime || 'slot'}-${nextTask.topic}`;
+      startGlobalTimer(uniqueId, parseInt(nextTask.duration), nextTask.topic);
+    } else {
+      // 3. Reset timer and log session (Home logic)
+      if (onTimerComplete) await onTimerComplete(task.topic, task.duration);
+    }
+    // Refresh history
+    fetchHistory();
   };
 
   useEffect(() => {
-    fetchPlans();
     const uid = auth.currentUser?.uid;
     if (uid) {
+      fetchPlans();
+      fetchHistory();
       getUserProfile(uid).then(data => {
         if (data) {
           setUserData(data);
@@ -56,6 +68,14 @@ function Dashboard({ goToUpload, activePlanId, setActivePlanId, setPage, activeT
       });
     }
   }, [activePlanId]);
+
+  async function fetchHistory() {
+    const uid = auth.currentUser?.uid;
+    if (uid) {
+      const hist = await getStudySessions(uid);
+      setHistory(hist.slice(0, 5)); // Show last 5
+    }
+  }
 
   async function fetchPlans() {
     const uid = auth.currentUser?.uid;
@@ -98,8 +118,8 @@ function Dashboard({ goToUpload, activePlanId, setActivePlanId, setPage, activeT
 
   const totalLessons = tasks.length;
   const completedLessons = tasks.filter(t => t.completed).length;
-  const xp = completedLessons * 10;
   
+  const totalXp = userData?.totalXp || 0;
   const streak = userData?.streak || 0;
   const maxStreak = userData?.maxStreak || 0;
 
@@ -112,10 +132,10 @@ function Dashboard({ goToUpload, activePlanId, setActivePlanId, setPage, activeT
     return { title: "Learning Seedling", icon: "🌱", next: 100, color: "#3b82f6" };
   };
 
-  const level = getLevelInfo(xp);
-  const nextTarget = level.next === "MAX" ? xp : level.next;
-  const prevTarget = xp >= 600 ? 600 : xp >= 300 ? 300 : xp >= 100 ? 100 : 0;
-  const levelProgress = level.next === "MAX" ? 100 : ((xp - prevTarget) / (nextTarget - prevTarget)) * 100;
+  const level = getLevelInfo(totalXp);
+  const nextTarget = level.next === "MAX" ? totalXp : level.next;
+  const prevTarget = totalXp >= 600 ? 600 : totalXp >= 300 ? 300 : totalXp >= 100 ? 100 : 0;
+  const levelProgress = level.next === "MAX" ? 100 : ((totalXp - prevTarget) / (nextTarget - prevTarget)) * 100;
 
   const todayString = format(new Date(), "yyyy-MM-dd");
   const todayTasks = tasks.filter(t => t.date === todayString);
@@ -284,6 +304,46 @@ function Dashboard({ goToUpload, activePlanId, setActivePlanId, setPage, activeT
                 )}
               </div>
             </Card>
+
+            {/* Study Memory / History */}
+            <Card title="Study Memory (Recently Completed)">
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                {history.length === 0 ? (
+                  <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>Your study journey begins here! 🌱</p>
+                ) : (
+                  history.map((session, idx) => (
+                    <div key={idx} style={{ 
+                      display: "flex", 
+                      justifyContent: "space-between", 
+                      alignItems: "center",
+                      padding: "12px 16px",
+                      background: "white",
+                      borderRadius: "12px",
+                      border: "1px solid var(--border)"
+                    }}>
+                      <div>
+                        <p style={{ margin: 0, fontWeight: "600", color: "var(--text-main)", fontSize: "0.95rem" }}>
+                          {session.topic}
+                        </p>
+                        <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                          {session.timestamp?.toDate ? format(session.timestamp.toDate(), "MMM d, h:mm a") : "Recently"} • {session.duration} mins
+                        </p>
+                      </div>
+                      <div style={{ 
+                        background: session.type === "Break" ? "#fef3c7" : "#d1fae5",
+                        color: session.type === "Break" ? "#92400e" : "#065f46",
+                        padding: "4px 10px",
+                        borderRadius: "20px",
+                        fontSize: "0.7rem",
+                        fontWeight: "bold"
+                      }}>
+                        {session.type.toUpperCase()}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </Card>
           </div>
 
           {/* Right Column: Statistics & Badges */}
@@ -301,8 +361,8 @@ function Dashboard({ goToUpload, activePlanId, setActivePlanId, setPage, activeT
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                 <div style={{ background: "white", padding: "16px", borderRadius: "16px", border: "1px solid var(--border)" }}>
-                  <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--text-muted)" }}>XP EARNED</p>
-                  <h3 style={{ margin: "4px 0 0 0" }}>{xp}</h3>
+                  <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--text-muted)" }}>TOTAL XP</p>
+                  <h3 style={{ margin: "4px 0 0 0" }}>{totalXp}</h3>
                 </div>
                 <div style={{ background: "white", padding: "16px", borderRadius: "16px", border: "1px solid var(--border)" }}>
                   <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--text-muted)" }}>STREAK</p>
