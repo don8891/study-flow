@@ -1,6 +1,7 @@
 import { useState } from "react";
 import AuthLayout from "../components/AuthLayout";
 import { loginUser } from "../api/api";
+import Logo from "../components/Logo";
 
 function Login({ onLogin, goToRegister }) {
   const [email, setEmail] = useState("");
@@ -17,7 +18,10 @@ function Login({ onLogin, goToRegister }) {
 
   return (
     <AuthLayout>
-      <h2 style={{ color: 'var(--primary)', marginBottom: '30px' }}>Welcome Back</h2>
+      <div style={{ marginBottom: '30px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+        <Logo size={48} />
+        <h3 style={{ color: 'var(--text-muted)', margin: 0, fontWeight: '500', fontSize: '1rem' }}>Welcome Back!</h3>
+      </div>
 
       <div className="input-group">
         <input

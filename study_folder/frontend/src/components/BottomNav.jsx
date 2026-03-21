@@ -1,10 +1,11 @@
 import { LayoutDashboard, CalendarKey, User, Brain, Sparkles } from "./Icons";
+import Logo from "./Logo";
 
 function BottomNav({ page, setPage, onLogout }) {
   return (
     <div className="sidebar">
       <div style={{ marginBottom: "40px", padding: "0 16px" }}>
-        <h2 style={{ color: "var(--primary)", fontSize: "1.5rem" }}>Study Flow</h2>
+        <Logo size={36} />
       </div>
 
       <button

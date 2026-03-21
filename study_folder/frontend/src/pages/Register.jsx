@@ -3,6 +3,7 @@ import AuthLayout from "../components/AuthLayout";
 import { registerUser } from "../api/api";
 import { auth } from "../firebase";
 import { createUserProfile } from "../api/firestore";
+import Logo from "../components/Logo";
 
 function Register({ onRegister, goToLogin }) {
   const [email, setEmail] = useState("");
@@ -21,7 +22,10 @@ function Register({ onRegister, goToLogin }) {
 
   return (
     <AuthLayout>
-      <h2 style={{ color: 'var(--primary)', marginBottom: '30px' }}>Join Study Flow</h2>
+      <div style={{ marginBottom: '30px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+        <Logo size={48} />
+        <h3 style={{ color: 'var(--text-muted)', margin: 0, fontWeight: '500', fontSize: '1rem' }}>Create an Account</h3>
+      </div>
 
       <div className="input-group">
         <input

@@ -3,6 +3,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Home from "./pages/Home";
 import { auth } from "./firebase";
+import Logo from "./components/Logo";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -28,7 +29,11 @@ function App() {
   };
 
   if (loading) {
-    return <div className="auth-container"><h2 style={{ color: "var(--primary)" }}>Loading Study Flow...</h2></div>;
+    return (
+      <div className="auth-container">
+        <Logo size={60} />
+      </div>
+    );
   }
 
   if (!isLoggedIn) {
