@@ -1,0 +1,414 @@
+:root {
+  --primary: #115e59; /* Deep Teal */
+  --primary-light: #e6f2f1;
+  --accent: #2dd4bf; /* Bright Mint */
+  --bg-main: #f0f7f4; /* Ultra Light Mint */
+  --bg-sidebar: #d4e9e2;
+  --bg-glass: rgba(255, 255, 255, 0.75);
+  --border: rgba(0, 77, 64, 0.08);
+  
+  --text-main: #062d2a;
+  --text-muted: #5e7e7b;
+  
+  --success: #10b981;
+  --error: #ef4444;
+  --shadow: 0 8px 32px rgba(0, 77, 64, 0.05);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Outfit', 'Inter', sans-serif;
+  background-color: var(--bg-main);
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(45, 212, 191, 0.15) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(17, 94, 89, 0.05) 0px, transparent 50%);
+  color: var(--text-main);
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* Glassmorphism Card */
+.glass-card {
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  border-radius: 24px;
+  padding: 24px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.glass-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 77, 64, 0.08);
+}
+
+/* Typography & Layout */
+h1, h2, h3 { margin: 0 0 10px 0; }
+p { margin: 0 0 10px 0; color: var(--text-muted); }
+
+/* Buttons */
+button {
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+button:hover {
+  background: #0d4a46;
+  transform: translateY(-1px);
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+.btn-sm {
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  border-radius: 10px;
+}
+
+.btn-secondary {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.btn-secondary:hover {
+  background: #d9e9e7;
+}
+
+.btn-danger {
+  background: #fee2e2;
+  color: #ef4444;
+}
+
+.btn-danger:hover {
+  background: #fecaca;
+}
+
+/* Inputs */
+.input-group input {
+  width: 100%;
+  padding: 12px 16px;
+  background: white;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  color: var(--text-main);
+  outline: none;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.input-group input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(45, 212, 191, 0.1);
+}
+
+/* Auth Specifics */
+.auth-container {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden; /* Prevent scroll */
+}
+
+.auth-card {
+  width: 90%;
+  max-width: 400px;
+  padding: 40px;
+  text-align: center;
+  position: relative;
+  /* overflow: hidden; Removed to allow glow/shadows to not be clipped if outside */
+  animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Page Layout */
+.page {
+  padding: 20px;
+  padding-bottom: 100px;
+  animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Navigation & Layout */
+.app-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 260px;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  padding: 30px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: fixed;
+  height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+  margin-left: 260px;
+  padding: 40px;
+  width: calc(100% - 260px);
+}
+
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .main-content { margin-left: 0; width: 100%; padding: 20px; }
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s;
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.5);
+  color: var(--primary);
+}
+
+.nav-item.active {
+  background: var(--primary);
+  color: white;
+  box-shadow: 0 4px 12px rgba(17, 94, 89, 0.2);
+}
+
+.bottom-nav button {
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-muted);
+  padding: 8px; /* Reduce padding to fit icons */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  min-width: 60px;
+}
+
+.bottom-nav button svg {
+  transition: transform 0.2s;
+}
+
+.bottom-nav button:hover svg {
+  transform: translateY(-2px);
+  color: var(--text-main);
+}
+
+.bottom-nav button.active {
+  color: var(--primary);
+}
+
+.bottom-nav button.active svg {
+  color: var(--primary);
+  filter: drop-shadow(0 0 8px var(--primary-glow));
+}
+
+/* General Layout Utils */
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card {
+  padding: 24px;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+/* Custom Calendar Styles */
+/* Custom Calendar Styles - Dark Premium Redesign */
+.custom-calendar {
+  width: 100% !important;
+  background: #1a1a1a !important; 
+  border: none !important;
+  font-family: inherit !important;
+  border-radius: 32px;
+  padding: 24px;
+  color: white !important;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Purple Top Glow */
+.custom-calendar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 4px;
+  background: #7c3aed;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  box-shadow: 0 0 20px #7c3aed;
+  z-index: 1;
+}
+
+.custom-calendar .react-calendar__navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  height: auto;
+}
+
+.custom-calendar .react-calendar__navigation__label {
+  font-weight: 700 !important;
+  font-size: 1.2rem !important;
+  color: var(--text-main) !important;
+  flex-grow: 1 !important;
+  text-align: center;
+}
+
+.custom-calendar .react-calendar__navigation__arrow {
+  min-width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: white !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.custom-calendar .react-calendar__navigation__arrow:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.custom-calendar .react-calendar__month-view__weekdays {
+  color: #666 !important;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  margin-bottom: 20px;
+}
+
+.custom-calendar .react-calendar__month-view__weekdays__weekday abbr {
+  text-decoration: none !important;
+}
+
+.custom-calendar .react-calendar__tile {
+  padding: 16px 8px !important;
+  border-radius: 50%;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-size: 1.1rem;
+  font-weight: 500;
+  position: relative;
+}
+
+.custom-calendar .react-calendar__tile:enabled:hover {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.custom-calendar .react-calendar__month-view__days__day--neighboringMonth {
+  color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.custom-calendar .react-calendar__tile--now {
+  background: none !important;
+  color: #7c3aed !important;
+  font-weight: 700;
+}
+
+.custom-calendar .react-calendar__tile--active {
+  background: #7c3aed !important;
+  color: white !important;
+  font-weight: 700;
+  box-shadow: 0 0 20px rgba(124, 58, 237, 0.5);
+}
+
+/* Study & Exam Specifics for Dark Theme */
+.study-tile::after {
+  content: '';
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  background: #7c3aed;
+  border-radius: 50%;
+}
+
+/* Exam tile gets a subtle glowing outer ring */
+.exam-tile {
+  border: 1px solid rgba(124, 58, 237, 0.4) !important;
+}
+
+.exam-tile::before {
+  content: '🎯';
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  font-size: 0.9rem;
+  z-index: 2;
+}
+
+/* Custom In-line Timer Hover Button */
+.card-hover .timer-start-btn {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  transform: translateX(10px);
+}
+
+.card-hover:hover .timer-start-btn,
+.card-hover .timer-start-btn.active {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
+}
