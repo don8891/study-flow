@@ -85,7 +85,8 @@ def generate_structured_topics(text):
 STRICT RULES:
 1. Each topic should be 2-6 words maximum.
 2. DO NOT include marks, credits, scores, hours, course objectives, textbooks, rules, or administrative text.
-3. Your response must be ONLY a valid JSON array like this, with NO markdown formatting around it:
+3. CLEAN THE NAMES: Completely remove prefixes like "Unit 1", "Chapter 4:", trailing page numbers, and weird symbols like '|' or quotes. Return just the pure conceptual name (e.g. "Moving Charges", "Magnetic Effects").
+4. Your response must be ONLY a valid JSON array like this, with NO markdown formatting around it:
    [
      {{ "topic": "Main Topic Name", "subtopics": ["Subtopic A", "Subtopic B"] }}
    ]
@@ -111,6 +112,22 @@ Syllabus Content:
     # Fallback: simple line extraction
     raw_lines = [line.strip() for line in text.split("\n") if len(line.strip()) > 5]
     return [{"topic": line, "subtopics": []} for line in raw_lines if len(line.split()) <= 10]
+
+
+# ── Topic Name Cleaning ──────────────────────────────────────
+def clean_topic_name(name):
+    # Remove 'Unit 1:', 'Chapter-4', 'Module 3', etc.
+    name = re.sub(r"^(chapter|unit|module)[\s\-]*[A-Za-z0-9]+[\s\:\-\|]*", "", name, flags=re.IGNORECASE)
+    # Remove pipes, weird quotes, underscores
+    name = re.sub(r"[\|‘'_\"“\”]", "", name)
+    # Remove trailing numbers (e.g. page numbers)
+    name = re.sub(r"\s+\d+$", "", name)
+    # Strip leading/trailing hyphens, colons, dots, commas
+    name = name.strip(" -:.,;")
+    # Title case it for a cleaner look
+    if name.isupper() or name.islower():
+        name = name.title()
+    return name.strip()
 
 
 # ── Routes ───────────────────────────────────────────────────
@@ -166,11 +183,15 @@ def upload_syllabus():
 
     for item in topics_raw:
         main_topic = item.get("topic", "").strip()
+        main_topic = clean_topic_name(main_topic)
+        
         if main_topic and len(main_topic.split()) <= 10 and not any(f in main_topic.lower() for f in forbidden):
-            subtopics = [
-                s.strip() for s in item.get("subtopics", [])
-                if s.strip() and len(s.split()) <= 10 and not any(f in s.lower() for f in forbidden)
-            ]
+            subtopics = []
+            for s in item.get("subtopics", []):
+                s = clean_topic_name(s.strip())
+                if s and len(s.split()) <= 10 and not any(f in s.lower() for f in forbidden):
+                    subtopics.append(s)
+            
             final_topics.append({"topic": main_topic, "subtopics": subtopics})
 
     return jsonify({"success": True, "topics": final_topics, "text": cleaned_text})
