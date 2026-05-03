@@ -152,6 +152,14 @@ function Quiz({ syllabusText, quiz, setQuiz, answers, setAnswers, showResult, se
                     );
                   })}
                 </div>
+                {!isCorrect && q.explanation && (
+                  <div style={{ marginTop: "15px", padding: "12px", background: "rgba(239, 68, 68, 0.05)", borderLeft: "4px solid var(--error)", borderRadius: "0 8px 8px 0" }}>
+                    <p style={{ margin: 0, fontSize: "0.95rem", color: "var(--text-main)", lineHeight: "1.5" }}>
+                      <strong style={{ color: "var(--error)" }}>Explanation: </strong> 
+                      {q.explanation}
+                    </p>
+                  </div>
+                )}
               </Card>
             );
           })}

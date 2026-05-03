@@ -225,22 +225,25 @@ SYLLABUS CONTENT:
 
     elif task == "quiz":
         system = "You are an expert quiz creator. Return only valid JSON, no extra text."
-        prompt = f"""Generate 5 high-quality multiple choice questions based on this syllabus content.
+        prompt = f"""Generate 5 UNIQUE and RANDOM multiple choice questions based on this syllabus content.
+Make sure the questions are different every time to ensure variety.
 
 STRICT CONSTRAINTS:
 - Focus only on actual subject matter, theories, and concepts.
 - Provide 4 options labeled A, B, C, D.
+- Include a brief explanation for the correct answer.
 - Return ONLY a JSON array, nothing else:
 [
   {{
     "question": "...",
     "options": {{"A": "...", "B": "...", "C": "...", "D": "..."}},
-    "answer": "A"
+    "answer": "A",
+    "explanation": "..."
   }}
 ]
 
 SYLLABUS CONTENT:
-{content[:2000]}"""
+{content[:4000]}"""
 
     elif task == "doubt":
         system = "You are a helpful academic tutor. Explain concepts clearly using the provided context."
