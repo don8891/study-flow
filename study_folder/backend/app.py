@@ -30,7 +30,7 @@ def call_ai(prompt, system_prompt="You are a helpful assistant.", max_tokens=102
     # 1. Try Groq first (fastest)
     try:
         response = groq_client.chat.completions.create(
-            model="llama3-8b-8192",   # Free, very fast
+            model="llama-3.1-8b-instant",   # Free, very fast
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user",   "content": prompt}
@@ -60,7 +60,11 @@ def clean_syllabus_text(text):
     blacklist_keywords = [
         "mark", "score", "credit", "weightage", "hour", "exam", "internal",
         "external", "total", "pattern", "duration", "question paper", "allotment",
-        "time", "minute", "mins", "hrs", "maximum", "minimum", "sec", "section"
+        "time", "minute", "mins", "hrs", "maximum", "minimum", "sec", "section",
+        "objective", "instruction", "rule", "administrative", "policy", "grade", 
+        "grading", "assignment", "project", "presentation", "attendance", "participation",
+        "syllabus", "course", "description", "outcome", "prerequisite", "textbook",
+        "reference", "material", "university", "department", "faculty", "student"
     ]
     for line in lines:
         line = line.strip()
@@ -80,8 +84,8 @@ def generate_structured_topics(text):
 
 STRICT RULES:
 1. Each topic should be 2-6 words maximum.
-2. DO NOT include marks, credits, scores, or hours.
-3. Return ONLY a valid JSON array like this:
+2. DO NOT include marks, credits, scores, hours, course objectives, textbooks, rules, or administrative text.
+3. Your response must be ONLY a valid JSON array like this, with NO markdown formatting around it:
    [
      {{ "topic": "Main Topic Name", "subtopics": ["Subtopic A", "Subtopic B"] }}
    ]
@@ -284,7 +288,7 @@ Teacher:"""
         messages.append({"role": "user", "content": question})
 
         response = groq_client.chat.completions.create(
-            model="llama3-8b-8192",
+            model="llama-3.1-8b-instant",
             messages=messages,
             max_tokens=1024,
             temperature=0.7
