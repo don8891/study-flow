@@ -166,7 +166,7 @@ def upload_syllabus():
     file.save(filepath)
 
     extracted_text = ""
-    if file.filename.endswith(".pdf"):
+    if file.filename.lower().endswith(".pdf"):
         reader = PdfReader(filepath)
         for page in reader.pages:
             extracted_text += page.extract_text() or ""

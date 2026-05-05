@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 📚 Study Flow 🚀
 
 **AI-Powered Personalized Study Management System**
@@ -90,19 +91,61 @@ If the primary model fails or is rate-limited, the system automatically switches
 
 ### **2. Backend Setup**
 
+=======
+# Study Flow 📚🚀
+Study Flow is an advanced, AI-powered study companion designed to transform your syllabus into a strategic learning path. It combines cloud LLM intelligence, OCR technology, and classic productivity techniques to help students master their subjects efficiently.
+
+## ✨ Key Features
+* **🎯 AI Quiz Master:** Generate conceptual multiple-choice quizzes directly from your syllabus. Features real-time scoring, percentage breakdowns, and detailed review modes.
+* **📘 Smart Study Guide:** Instantly summarize complex syllabi into actionable study blocks with mnemonic tips and key theories.
+* **💬 Instant Doubt Clear:** Chat with an AI tutor trained on your specific syllabus context.
+* **⏱️ Pro Pomodoro & Planner:** Integrated study timer with manual task completion and an interactive calendar to track your learning journey.
+* **🖼️ OCR Syllabus Upload:** Upload syllabus PDFs or images; the system extracts content automatically using Tesseract OCR.
+* **🌐 Network-Ready:** Host the app on your local network to access your study flow from any phone or tablet in your house.
+
+## 🛠️ Tech Stack
+
+### Frontend
+* React 19 with Vite/Rolldown
+* Firebase Auth & Firestore: Real-time data persistence and user management.
+* Vanilla CSS: Premium, dark-mode glassmorphism design system.
+* Date-fns: Precision scheduling and calendar logic.
+
+### Backend
+* Flask (Python): High-performance micro-framework.
+* Groq API (Llama 3.1 8B Instant): Primary AI engine — ultra-fast cloud inference, free tier available.
+* Google Gemini (gemini-1.5-flash): Fallback AI engine if Groq is unavailable.
+* Tesseract OCR & PyPDF2: Robust syllabus parsing from various file formats.
+* Flask-CORS: Secure cross-origin resource sharing.
+
+## 🚀 Getting Started
+
+### 1. Prerequisites
+* Tesseract OCR (Windows installation required)
+* Node.js & Python 3.x
+* A free Groq API Key
+* A free Google Gemini API Key (for fallback)
+
+### 2. Backend Setup
+>>>>>>> ab026de (Enabled option to upload PDF)
 ```bash
 cd backend
 python -m venv venv
 venv\Scripts\activate
 pip install -r requirements.txt
 ```
+<<<<<<< HEAD
 
 Create a `.env` file in the `backend/` folder:
 
+=======
+Create a `.env` file in the `backend/` folder:
+>>>>>>> ab026de (Enabled option to upload PDF)
 ```env
 GROQ_API_KEY=your_groq_api_key_here
 GEMINI_API_KEY=your_gemini_api_key_here
 ```
+<<<<<<< HEAD
 
 Start the backend server:
 
@@ -117,12 +160,23 @@ python app.py
 
 ### **3. Frontend Setup**
 
+=======
+Then start the server:
+```bash
+python app.py
+```
+> [!NOTE]
+> Ensure the Tesseract path in `app.py` matches your installation (default: `C:\Program Files\Tesseract-OCR\tesseract.exe`).
+
+### 3. Frontend Setup
+>>>>>>> ab026de (Enabled option to upload PDF)
 ```bash
 cd frontend
 npm install
 npm run dev -- --host
 ```
 
+<<<<<<< HEAD
 ---
 
 ## 📊 Core Workflow
@@ -168,3 +222,11 @@ For queries or collaboration, feel free to connect.
 ---
 
 ⭐ If you found this project useful, consider giving it a star on GitHub!
+=======
+## 🤖 AI Architecture
+Study Flow uses a dual-engine fallback system for maximum reliability:
+* **Groq (Primary)** — Runs `llama-3.1-8b-instant` for near-instant responses with no local GPU required.
+* **Google Gemini (Fallback)** — Automatically kicks in if Groq is unavailable or rate-limited.
+
+This ensures the app stays functional even if one provider has downtime, with zero dependency on local hardware.
+>>>>>>> ab026de (Enabled option to upload PDF)
