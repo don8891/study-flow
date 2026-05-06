@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { auth } from "../firebase";
-import { getUserProfile, updateUsername, createUserProfile } from "../api/firestore";
+import { getUserProfile, updateUsername, createUserProfile, getCompletedTasks } from "../api/firestore";
 import Card from "../components/Card";
 
 const getLevelInfo = (xp) => {
@@ -17,6 +17,7 @@ function Profile({ onLogout }) {
   const [isEditing, setIsEditing] = useState(false);
   const [newUsername, setNewUsername] = useState("");
   const [error, setError] = useState(null);
+  const [completedTasks, setCompletedTasks] = useState([]);
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
@@ -46,6 +47,10 @@ function Profile({ onLogout }) {
         // Always merge Firebase Auth email in case Firestore is missing it
         setProfile({ ...data, email: user.email });
         setNewUsername(data.username || "");
+
+        // Load completed task history
+        const tasks = await getCompletedTasks(user.uid);
+        setCompletedTasks(tasks);
       } catch (err) {
         console.error("Error loading profile:", err);
         // Still show something useful even if Firestore fails
@@ -283,6 +288,99 @@ function Profile({ onLogout }) {
                 </div>
               ))}
             </div>
+          </Card>
+
+          {/* Completed Task History */}
+          <Card title="📚 Completed Tasks History">
+            {completedTasks.length === 0 ? (
+              <p style={{ color: "var(--text-muted)", fontSize: "0.9rem", textAlign: "center", padding: "20px 0" }}>
+                No completed tasks yet. Start studying to build your history! 🌱
+              </p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxHeight: "400px", overflowY: "auto" }}>
+                {/* Summary strip */}
+                <div style={{
+                  display: "flex",
+                  gap: "12px",
+                  marginBottom: "8px",
+                  padding: "12px 16px",
+                  background: "linear-gradient(135deg, var(--primary), var(--accent))",
+                  borderRadius: "14px",
+                  color: "white"
+                }}>
+                  <div style={{ textAlign: "center", flex: 1 }}>
+                    <p style={{ margin: 0, fontSize: "0.7rem", opacity: 0.85, color: "white" }}>TOTAL DONE</p>
+                    <h3 style={{ margin: "2px 0 0 0", color: "white" }}>{completedTasks.length}</h3>
+                  </div>
+                  <div style={{ textAlign: "center", flex: 1 }}>
+                    <p style={{ margin: 0, fontSize: "0.7rem", opacity: 0.85, color: "white" }}>FOCUS SESSIONS</p>
+                    <h3 style={{ margin: "2px 0 0 0", color: "white" }}>
+                      {completedTasks.filter(t => t.type === "focus").length}
+                    </h3>
+                  </div>
+                  <div style={{ textAlign: "center", flex: 1 }}>
+                    <p style={{ margin: 0, fontSize: "0.7rem", opacity: 0.85, color: "white" }}>MINS STUDIED</p>
+                    <h3 style={{ margin: "2px 0 0 0", color: "white" }}>
+                      {completedTasks
+                        .filter(t => t.type === "focus")
+                        .reduce((sum, t) => sum + (parseInt(t.duration) || 0), 0)}
+                    </h3>
+                  </div>
+                </div>
+
+                {/* Task list */}
+                {completedTasks.map((task, idx) => (
+                  <div key={task.id || idx} style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "12px 16px",
+                    background: "white",
+                    borderRadius: "12px",
+                    border: "1px solid var(--border)"
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <span style={{ fontSize: "1.1rem" }}>
+                        {task.type === "focus" ? "✅" : "☕"}
+                      </span>
+                      <div>
+                        <p style={{
+                          margin: 0,
+                          fontWeight: "600",
+                          color: "var(--text-main)",
+                          fontSize: "0.9rem",
+                          maxWidth: "220px",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap"
+                        }}>
+                          {task.topic}
+                        </p>
+                        <p style={{ margin: 0, fontSize: "0.72rem", color: "var(--text-muted)" }}>
+                          {task.planName} •{" "}
+                          {task.completedAt?.toDate
+                            ? new Date(task.completedAt.toDate()).toLocaleDateString("en-IN", {
+                                day: "numeric", month: "short", year: "numeric"
+                              })
+                            : task.date}
+                        </p>
+                      </div>
+                    </div>
+                    <div style={{
+                      background: task.type === "focus" ? "#d1fae5" : "#fef3c7",
+                      color: task.type === "focus" ? "#065f46" : "#92400e",
+                      padding: "4px 10px",
+                      borderRadius: "20px",
+                      fontSize: "0.7rem",
+                      fontWeight: "bold",
+                      whiteSpace: "nowrap"
+                    }}>
+                      {task.duration} mins
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </Card>
         </div>
       </div>

@@ -7,7 +7,7 @@ import Quiz from "./Quiz";
 import AIAssistant from "./AIAssistant";
 import BottomNav from "../components/BottomNav";
 import { auth } from "../firebase";
-import { getStudyPlan, updatePlanTasks, recordActivity, logStudySession } from "../api/firestore";
+import { getStudyPlan, updatePlanTasks, recordActivity, logStudySession, saveCompletedTask } from "../api/firestore";
 
 function Home({ onLogout }) {
   const [page, setPage] = useState("home");
@@ -44,15 +44,26 @@ function Home({ onLogout }) {
     const duration = manualDuration || parseInt(timerDuration);
 
     if (topic && activePlanId) {
-      // Log session
       const isBreak = topic.toLowerCase().includes("break");
-      await logStudySession(uid, topic, duration, isBreak ? "Break" : "Focus");
       
-      // Update XP for manual/auto completion
+      // Log session as before
+      await logStudySession(uid, topic, duration, isBreak ? "Break" : "Focus");
       await recordActivity(uid);
+
+      // ── NEW: Save to persistent completed task history ──
+      if (!isBreak) {
+        const plan = await getStudyPlan(uid, activePlanId);
+        const planName = plan?.name || "My Plan";
+        await saveCompletedTask(uid, {
+          topic,
+          type: "focus",
+          duration,
+          date: new Date().toISOString().split("T")[0]
+        }, planName);
+      }
+      // ────────────────────────────────────────────────────
     }
-    
-    // Clear timer state
+
     setActiveTimerId(null);
     setSecondsLeft(0);
     setTimerTopic("");

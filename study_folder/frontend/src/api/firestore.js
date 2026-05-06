@@ -147,3 +147,25 @@ export async function getStudySessions(uid) {
   const snap = await getDocs(q);
   return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
+
+/* Save a completed task to persistent history */
+export async function saveCompletedTask(uid, task, planName) {
+  const ref = collection(db, "users", uid, "completedTasks");
+  const taskDoc = doc(ref);
+  await setDoc(taskDoc, {
+    topic: task.topic,
+    type: task.type || "focus",
+    duration: task.duration,
+    planName: planName || "Unknown Plan",
+    completedAt: new Date(),
+    date: task.date
+  });
+}
+
+/* Get all completed tasks for a user */
+export async function getCompletedTasks(uid) {
+  const ref = collection(db, "users", uid, "completedTasks");
+  const q = query(ref, orderBy("completedAt", "desc"));
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
