@@ -329,5 +329,95 @@ Teacher:"""
     return jsonify({"success": False, "message": "AI service unavailable."})
 
 
+import urllib.parse
+
+@app.route("/generate-image", methods=["POST"])
+def generate_image():
+    data = request.json
+    concept = data.get("concept", "")
+    context = data.get("context", "")
+
+    if not concept:
+        return jsonify({"success": False, "message": "No concept provided"})
+
+    # ── Step 1: Use Gemini to generate a smart image prompt ──────────
+    prompt_for_prompt = f"""
+    Create a short, precise image generation prompt (max 20 words) for a 
+    EDUCATIONAL DIAGRAM or VISUAL EXPLANATION of this concept:
+    
+    Concept: {concept}
+    Context: {context[:200] if context else ''}
+    
+    Rules:
+    - Focus on diagrams, flowcharts, illustrations, or visual models
+    - Use terms like: "diagram", "illustration", "educational", "labeled", "clean"
+    - No people, no text-heavy images
+    - Example good prompt: "photosynthesis process diagram with labeled arrows chloroplast"
+    
+    Return ONLY the image prompt, nothing else.
+    """
+
+    image_prompt = concept  # fallback
+    try:
+        result = call_ai(
+            prompt=prompt_for_prompt,
+            system_prompt="You are an expert at creating image generation prompts for educational diagrams.",
+            max_tokens=50
+        )
+        if result:
+            # Clean up the prompt
+            image_prompt = result.strip().strip('"').strip("'")
+            # Remove any extra sentences
+            image_prompt = image_prompt.split(".")[0].strip()
+    except Exception as e:
+        print(f"Prompt generation failed: {e}")
+
+    # ── Step 2: Try Gemini Image Generation ─────────────────────────
+    try:
+        imagen_model = genai.ImageGenerationModel("imagen-3.0-generate-002")
+        response = imagen_model.generate_images(
+            prompt=f"Educational diagram: {image_prompt}, clean white background, labeled, scientific illustration style",
+            number_of_images=1,
+            aspect_ratio="4:3",
+            safety_filter_level="block_only_high",
+            person_generation="dont_allow"
+        )
+        if response.generated_images:
+            import base64
+            img_data = response.generated_images[0]._pil_image
+            import io
+            buffer = io.BytesIO()
+            img_data.save(buffer, format="PNG")
+            img_base64 = base64.b64encode(buffer.getvalue()).decode()
+            return jsonify({
+                "success": True,
+                "image_url": None,
+                "image_base64": f"data:image/png;base64,{img_base64}",
+                "prompt_used": image_prompt,
+                "source": "gemini"
+            })
+    except Exception as e:
+        print(f"Gemini image generation failed: {e}, trying fallback...")
+
+    # ── Step 3: Fallback — Pollinations.ai (Free, No API Key) ───────
+    try:
+        encoded_prompt = urllib.parse.quote(
+            f"educational diagram {image_prompt} clean white background labeled scientific"
+        )
+        pollinations_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=800&height=600&nologo=true&seed={hash(concept) % 9999}"
+        
+        return jsonify({
+            "success": True,
+            "image_url": pollinations_url,
+            "image_base64": None,
+            "prompt_used": image_prompt,
+            "source": "pollinations"
+        })
+    except Exception as e:
+        print(f"Pollinations fallback failed: {e}")
+
+    return jsonify({"success": False, "message": "Image generation failed"})
+
+
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')
