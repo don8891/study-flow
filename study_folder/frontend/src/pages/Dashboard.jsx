@@ -4,6 +4,7 @@ import { auth } from "../firebase";
 import { getStudyPlan, getUserProfile, getStudyPlansList, deleteStudyPlan, updatePlanTasks, recordActivity, getStudySessions } from "../api/firestore";
 import Card from "../components/Card";
 import PomodoroTimer from "../components/PomodoroTimer";
+import { rescheduleMissedTasks } from "../utils/scheduler";
 
 async function toggleTaskComplete(task, tasks, setTasks, activePlanId) {
   const isNowCompleted = true; // Only marking as completed via timer
@@ -109,9 +110,31 @@ function Dashboard({ goToUpload, activePlanId, setActivePlanId, setPage, activeT
   useEffect(() => {
     const uid = auth.currentUser?.uid;
     if (uid && activePlanId) {
-      getStudyPlan(uid, activePlanId).then(data => {
-        setTasks(data?.tasks || []);
+      getStudyPlan(uid, activePlanId).then(async (data) => {
+        if (!data) return;
+
+        const loadedTasks = data?.tasks || [];
         setExamDate(data?.examDate);
+
+        // ── Dynamic Rescheduling ──────────────────────────────
+        const today = new Date().toISOString().split("T")[0];
+        const hasMissedTasks = loadedTasks.some(
+          (t) => !t.completed && t.type === "focus" && t.date < today
+        );
+
+        if (hasMissedTasks) {
+          const studyHours = data?.studyHours || 4;
+          const startTime = data?.studyPreference || "09:00";
+          const rescheduled = rescheduleMissedTasks(loadedTasks, studyHours, startTime);
+          setTasks(rescheduled);
+
+          // Save rescheduled plan back to Firestore silently
+          await updatePlanTasks(uid, activePlanId, rescheduled);
+          console.log("Auto-rescheduled missed tasks.");
+        } else {
+          setTasks(loadedTasks);
+        }
+        // ─────────────────────────────────────────────────────
       });
     }
   }, [activePlanId]);

@@ -92,3 +92,128 @@ export function generateTasks(topics, examDate, studyHours, startTimeStr) {
 
   return tasks;
 }
+
+/**
+ * Reschedules all incomplete future tasks starting from today.
+ * Completed tasks stay untouched. Incomplete past tasks are moved forward.
+ */
+export function rescheduleMissedTasks(tasks, studyHours, startTimeStr) {
+  const today = new Date();
+  const todayStr = format(today, "yyyy-MM-dd");
+
+  // Separate completed tasks from incomplete ones
+  const completedTasks = tasks.filter(t => t.completed);
+  const incompleteTasks = tasks.filter(t => !t.completed);
+
+  // Only reschedule tasks that are in the past (missed) or today
+  const missedTasks = incompleteTasks.filter(t => t.date < todayStr);
+  const futureTasks = incompleteTasks.filter(t => t.date >= todayStr);
+
+  if (missedTasks.length === 0) {
+    return tasks; // Nothing to reschedule
+  }
+
+  // Combine missed + future incomplete tasks to redistribute
+  const tasksToReschedule = [...missedTasks, ...futureTasks];
+
+  // Separate focus sessions and breaks (we only reschedule focus sessions;
+  // breaks will be re-injected automatically)
+  const focusTasksOnly = tasksToReschedule.filter(t => t.type === "focus");
+
+  // Build synthetic topic list from existing focus tasks
+  const syntheticTopics = focusTasksOnly.map(t => ({
+    topic: t.topic,
+    subtopics: []
+  }));
+
+  // Re-generate tasks starting from today
+  const rescheduled = generateTasksFromDate(syntheticTopics, today, studyHours, startTimeStr);
+
+  return [...completedTasks, ...rescheduled];
+}
+
+
+/**
+ * Same as generateTasks but accepts a Date object as start instead of examDate.
+ */
+export function generateTasksFromDate(topics, startDate, studyHours, startTimeStr) {
+  const tasks = [];
+  const maxMinsPerDay = studyHours * 60;
+
+  let startHour = 9;
+  let startMinute = 0;
+  if (startTimeStr && startTimeStr.includes(":")) {
+    const parts = startTimeStr.split(":");
+    startHour = parseInt(parts[0], 10);
+    startMinute = parseInt(parts[1], 10);
+  }
+
+  let currentStudyDate = new Date(startDate);
+  let currentTimePointer = new Date(currentStudyDate);
+  currentTimePointer.setHours(startHour, startMinute, 0, 0);
+
+  let minsUsedToday = 0;
+  let taskCounter = 0;
+
+  topics.forEach((mainItem) => {
+    const itemsToSchedule =
+      mainItem.subtopics && mainItem.subtopics.length > 0
+        ? mainItem.subtopics
+        : [mainItem.topic];
+
+    itemsToSchedule.forEach((subtopic, subIndex) => {
+      if (minsUsedToday + 30 > maxMinsPerDay) {
+        currentStudyDate = addDays(currentStudyDate, 1);
+        currentTimePointer = new Date(currentStudyDate);
+        currentTimePointer.setHours(startHour, startMinute, 0, 0);
+        minsUsedToday = 0;
+        taskCounter = 0;
+      }
+
+      const dateStr = format(currentStudyDate, "yyyy-MM-dd");
+      taskCounter++;
+
+      const focusStart = format(currentTimePointer, "hh:mm a");
+      currentTimePointer.setMinutes(currentTimePointer.getMinutes() + 25);
+      const focusEnd = format(currentTimePointer, "hh:mm a");
+
+      tasks.push({
+        date: dateStr,
+        topic:
+          subIndex === 0 && mainItem.subtopics && mainItem.subtopics.length > 0
+            ? `${mainItem.topic}: ${subtopic}`
+            : subtopic,
+        duration: "25",
+        completed: false,
+        type: "focus",
+        startTime: focusStart,
+        endTime: focusEnd,
+        preference: startTimeStr,
+      });
+
+      minsUsedToday += 25;
+
+      const isLongBreak = taskCounter % 4 === 0;
+      const breakDuration = isLongBreak ? 20 : 5;
+
+      const breakStart = format(currentTimePointer, "hh:mm a");
+      currentTimePointer.setMinutes(currentTimePointer.getMinutes() + breakDuration);
+      const breakEnd = format(currentTimePointer, "hh:mm a");
+
+      tasks.push({
+        date: dateStr,
+        topic: isLongBreak ? "Long Break 🧘" : "Short Break ☕",
+        duration: breakDuration.toString(),
+        completed: false,
+        type: "break",
+        startTime: breakStart,
+        endTime: breakEnd,
+        preference: startTimeStr,
+      });
+
+      minsUsedToday += breakDuration;
+    });
+  });
+
+  return tasks;
+}

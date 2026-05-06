@@ -7,7 +7,7 @@ import PomodoroTimer from "../components/PomodoroTimer";
 import { db, auth } from "../firebase";
 import { doc, updateDoc } from "firebase/firestore";
 import { getStudyPlan, updatePlanTasks, recordActivity } from "../api/firestore";
-import { generateTasks } from "../utils/scheduler";
+import { generateTasks, rescheduleMissedTasks } from "../utils/scheduler";
 
 
 function Planner({ activePlanId, activeTimerId, secondsLeft, startGlobalTimer, onTimerComplete }) {
@@ -53,11 +53,30 @@ function Planner({ activePlanId, activeTimerId, secondsLeft, startGlobalTimer, o
       if (uid && activePlanId) {
         const plan = await getStudyPlan(uid, activePlanId);
         if (plan) {
-          setTasks(plan.tasks || []);
           setPlanData(plan);
           setEditHours(plan.studyHours || 4);
           setEditDate(plan.examDate || "");
           setEditStartTime(plan.studyPreference || "09:00");
+
+          // ── Dynamic Rescheduling ────────────────────────────
+          const today = new Date().toISOString().split("T")[0];
+          const loadedTasks = plan.tasks || [];
+          const hasMissedTasks = loadedTasks.some(
+            (t) => !t.completed && t.type === "focus" && t.date < today
+          );
+
+          if (hasMissedTasks) {
+            const rescheduled = rescheduleMissedTasks(
+              loadedTasks,
+              plan.studyHours || 4,
+              plan.studyPreference || "09:00"
+            );
+            setTasks(rescheduled);
+            await updatePlanTasks(uid, activePlanId, rescheduled);
+          } else {
+            setTasks(loadedTasks);
+          }
+          // ───────────────────────────────────────────────────
         }
       }
     }
@@ -128,21 +147,58 @@ function Planner({ activePlanId, activeTimerId, secondsLeft, startGlobalTimer, o
     <div className="page" style={{ paddingBottom: '80px' }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
         <h1 style={{ color: "var(--primary)", margin: 0 }}>Study Planner</h1>
-        <button 
-          onClick={() => setIsEditing(!isEditing)}
-          style={{ 
-            padding: "10px 20px", 
-            borderRadius: "12px", 
-            background: "rgba(255,255,255,0.05)",
-            border: "1px solid rgba(255,255,255,0.1)",
-            color: "var(--text)",
-            fontSize: "0.9rem",
-            fontWeight: "bold",
-            cursor: "pointer"
-          }}
-        >
-          {isEditing ? "Cancel Edit" : "⚙️ Plan Settings"}
-        </button>
+        <div style={{ display: "flex", gap: "12px" }}>
+          <button
+            onClick={async () => {
+              const uid = auth.currentUser?.uid;
+              if (!uid || !activePlanId) return;
+              const today = new Date().toISOString().split("T")[0];
+              const hasMissed = tasks.some(
+                (t) => !t.completed && t.type === "focus" && t.date < today
+              );
+              if (!hasMissed) {
+                alert("No missed tasks to reschedule! You're up to date ✅");
+                return;
+              }
+              const rescheduled = rescheduleMissedTasks(
+                tasks,
+                planData?.studyHours || 4,
+                planData?.studyPreference || "09:00"
+              );
+              setTasks(rescheduled);
+              await updatePlanTasks(uid, activePlanId, rescheduled);
+              alert("Plan rescheduled successfully! Missed tasks moved to today onwards. 🗓️");
+            }}
+            style={{
+              padding: "10px 20px",
+              borderRadius: "12px",
+              background: "var(--primary-light)",
+              color: "var(--primary)",
+              border: "1px solid var(--primary)",
+              fontSize: "0.9rem",
+              fontWeight: "bold",
+              cursor: "pointer"
+            }}
+          >
+            🔄 Reschedule Missed
+          </button>
+
+          <button 
+            onClick={() => setIsEditing(!isEditing)}
+            style={{ 
+              padding: "10px 20px", 
+              borderRadius: "12px", 
+              background: "rgba(255,255,255,0.05)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              color: "var(--text)",
+              fontSize: "0.9rem",
+              fontWeight: "bold",
+              cursor: "pointer"
+            }}
+          >
+            {isEditing ? "Cancel Edit" : "⚙️ Plan Settings"}
+          </button>
+        </div>
       </div>
 
       {isEditing && (
