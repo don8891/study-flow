@@ -16,10 +16,17 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
+@app.route("/")
+def home():
+    return "Backend running"
+
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+if os.name == 'nt':  # Windows
+    pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+else:  # Render / Linux
+    pytesseract.pytesseract.tesseract_cmd = "/usr/bin/tesseract"
 
 # ── API Clients ──────────────────────────────────────────────
 groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
