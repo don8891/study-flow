@@ -243,7 +243,7 @@ function Planner({ activePlanId, activeTimerId, secondsLeft, startGlobalTimer, o
         </Card>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1.5fr", gap: "24px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "24px" }}>
         {/* Calendar Side */}
         <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
           <Card title="Calendar">

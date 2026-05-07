@@ -118,7 +118,7 @@ function Profile({ onLogout }) {
     <div className="page" style={{ paddingBottom: "100px" }}>
       <h1 style={{ color: "var(--primary)", marginBottom: "30px" }}>My Study Identity</h1>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "24px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "24px" }}>
         {/* Left Column: Avatar & Basic Info */}
         <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
           <Card>
@@ -238,7 +238,7 @@ function Profile({ onLogout }) {
           </Card>
 
           {/* Streak Stats */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "12px" }}>
             <Card>
               <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                 Current Streak

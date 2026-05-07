@@ -223,7 +223,7 @@ function Dashboard({ goToUpload, activePlanId, setActivePlanId, setPage, activeT
       ) : (
         <div style={{ 
           display: "grid", 
-          gridTemplateColumns: "1.5fr 1fr", 
+          gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", 
           gap: "24px",
           alignItems: "start"
         }}>

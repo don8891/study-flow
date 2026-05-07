@@ -413,14 +413,19 @@ button:active {
   transform: translateX(0);
 }
 
-/* ── MOBILE BOTTOM NAV ─────────────────────────── */
+/* ── MOBILE ─────────────────────────────────────── */
 .mobile-bottom-nav {
   display: none;
 }
 
 @media (max-width: 768px) {
-  /* Show bottom nav, hide sidebar */
-  .sidebar { display: none; }
+
+  /* Hide sidebar */
+  .sidebar {
+    display: none !important;
+  }
+
+  /* Show bottom nav */
   .mobile-bottom-nav {
     display: flex;
     position: fixed;
@@ -432,11 +437,11 @@ button:active {
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-top: 1px solid var(--border);
-    z-index: 100;
+    z-index: 9999;
     justify-content: space-around;
     align-items: center;
-    padding: 0 8px;
-    padding-bottom: env(safe-area-inset-bottom); /* iPhone notch */
+    padding: 0 4px;
+    padding-bottom: env(safe-area-inset-bottom);
   }
 
   .mobile-nav-item {
@@ -444,15 +449,16 @@ button:active {
     flex-direction: column;
     align-items: center;
     gap: 3px;
-    padding: 6px 10px;
+    padding: 6px 8px;
     border-radius: 12px;
     color: var(--text-muted);
     background: transparent;
     border: none;
-    font-size: 0.65rem;
+    font-size: 0.62rem;
     font-weight: 600;
     cursor: pointer;
-    min-width: 56px;
+    flex: 1;
+    max-width: 64px;
     transition: all 0.2s;
   }
 
@@ -461,45 +467,102 @@ button:active {
     background: var(--primary-light);
   }
 
-  /* Fix main content — no left margin, add bottom padding for nav */
+  /* Prevent whole page from zooming/scrolling sideways */
+  body {
+    overflow-x: hidden !important;
+  }
+
+  /* Main content area */
   .main-content {
     margin-left: 0 !important;
     width: 100% !important;
+    max-width: 100vw !important;
     padding: 16px !important;
     padding-bottom: 80px !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
   }
 
-  /* Stack ALL multi-column grids to single column */
-  .page [style*="gridTemplateColumns"] {
-    grid-template-columns: 1fr !important;
+  /* Every page wrapper */
+  .page {
+    padding: 12px !important;
+    padding-bottom: 90px !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
   }
 
-  /* Tighten headings */
-  .page h1 { font-size: 1.6rem !important; }
-  .page h2 { font-size: 1.3rem !important; }
+  /* Force ALL inline grid layouts to single column */
+  .page > div,
+  .page > div > div {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
 
-  /* Dashboard header wrap */
+  /* Glass cards */
+  .glass-card {
+    padding: 14px !important;
+    border-radius: 16px !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+  }
+
+  /* Headers stack vertically */
+  .page > header,
   .page header {
     flex-direction: column !important;
     align-items: flex-start !important;
-    gap: 12px;
+    gap: 10px !important;
+    width: 100% !important;
   }
 
-  /* Card padding tighter on mobile */
-  .glass-card {
-    padding: 16px !important;
-    border-radius: 16px !important;
+  .page header > div,
+  .page header > h1 {
+    width: 100% !important;
+    flex-wrap: wrap !important;
   }
 
-  /* Calendar full width */
+  /* Headings */
+  .page h1 { font-size: 1.5rem !important; }
+  .page h2 { font-size: 1.2rem !important; }
+
+  /* Fix the react-calendar overflow — this is the zoom culprit */
   .custom-calendar {
-    padding: 12px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 10px !important;
+    border-radius: 16px !important;
+    box-sizing: border-box !important;
   }
 
-  /* Make select/buttons in header stack */
-  .page header > div {
-    flex-wrap: wrap;
-    width: 100%;
+  .react-calendar {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .custom-calendar .react-calendar__tile {
+    padding: 10px 4px !important;
+    font-size: 0.9rem !important;
+  }
+
+  /* Calendar center wrapper */
+  .calendar-center {
+    width: 100% !important;
+    overflow: hidden !important;
+  }
+
+  /* Fix select dropdowns in headers */
+  select {
+    max-width: 160px !important;
+    font-size: 0.85rem !important;
+  }
+
+  /* Pomodoro timer buttons */
+  .timer-start-btn {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    transform: none !important;
   }
 }
+
 
