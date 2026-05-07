@@ -19,12 +19,14 @@ export async function logoutUser() {
   await signOut(auth);
 }
 
+const BACKEND_URL = "https://studyflow-backend-n0um.onrender.com";
+
 export async function uploadSyllabus(file, uid) {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("uid", uid);
 
-  const res = await fetch("http://127.0.0.1:5000/upload-syllabus", {
+  const res = await fetch(`${BACKEND_URL}/upload-syllabus`, {
     method: "POST",
     body: formData
   });
@@ -33,7 +35,7 @@ export async function uploadSyllabus(file, uid) {
 }
 
 export async function callAI(task, content, syllabusContext = "") {
-  const res = await fetch("http://127.0.0.1:5000/ai-assistant", {
+  const res = await fetch(`${BACKEND_URL}/ai-assistant`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ task, content, syllabusContext })
@@ -44,7 +46,7 @@ export async function callAI(task, content, syllabusContext = "") {
 
 export async function generateConceptImage(concept, context = "") {
   try {
-    const res = await fetch("http://127.0.0.1:5000/generate-image", {
+    const res = await fetch(`${BACKEND_URL}/generate-image`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ concept, context })
