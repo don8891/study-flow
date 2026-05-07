@@ -147,7 +147,7 @@ function Planner({ activePlanId, activeTimerId, secondsLeft, startGlobalTimer, o
     <div className="page" style={{ paddingBottom: '80px' }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
         <h1 style={{ color: "var(--primary)", margin: 0 }}>Study Planner</h1>
-        <div style={{ display: "flex", gap: "12px" }}>
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
           <button
             onClick={async () => {
               const uid = auth.currentUser?.uid;

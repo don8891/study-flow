@@ -173,7 +173,7 @@ function Dashboard({ goToUpload, activePlanId, setActivePlanId, setPage, activeT
           </p>
           <h1 style={{ margin: 0, color: "var(--primary)" }}>Dashboard</h1>
         </div>
-        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
           <div style={{ position: "relative", display: "flex", alignItems: "center", gap: "8px" }}>
             <select 
               value={activePlanId || ""} 

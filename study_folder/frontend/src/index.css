@@ -412,3 +412,94 @@ button:active {
   pointer-events: auto;
   transform: translateX(0);
 }
+
+/* ── MOBILE BOTTOM NAV ─────────────────────────── */
+.mobile-bottom-nav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  /* Show bottom nav, hide sidebar */
+  .sidebar { display: none; }
+  .mobile-bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+    z-index: 100;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 8px;
+    padding-bottom: env(safe-area-inset-bottom); /* iPhone notch */
+  }
+
+  .mobile-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 6px 10px;
+    border-radius: 12px;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    font-size: 0.65rem;
+    font-weight: 600;
+    cursor: pointer;
+    min-width: 56px;
+    transition: all 0.2s;
+  }
+
+  .mobile-nav-item.active {
+    color: var(--primary);
+    background: var(--primary-light);
+  }
+
+  /* Fix main content — no left margin, add bottom padding for nav */
+  .main-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+    padding: 16px !important;
+    padding-bottom: 80px !important;
+  }
+
+  /* Stack ALL multi-column grids to single column */
+  .page [style*="gridTemplateColumns"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Tighten headings */
+  .page h1 { font-size: 1.6rem !important; }
+  .page h2 { font-size: 1.3rem !important; }
+
+  /* Dashboard header wrap */
+  .page header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px;
+  }
+
+  /* Card padding tighter on mobile */
+  .glass-card {
+    padding: 16px !important;
+    border-radius: 16px !important;
+  }
+
+  /* Calendar full width */
+  .custom-calendar {
+    padding: 12px !important;
+  }
+
+  /* Make select/buttons in header stack */
+  .page header > div {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+}
+
