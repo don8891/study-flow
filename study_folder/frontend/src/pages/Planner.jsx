@@ -17,7 +17,7 @@ function Planner({ activePlanId, activeTimerId, secondsLeft, startGlobalTimer, o
   const handleManualComplete = async (task) => {
     // 1. Mark task as done locally and in Firestore
     const updatedTasks = tasks.map(t =>
-      t.date === task.date && t.topic === task.topic && t.startTime === task.startTime
+      (t.id && task.id && t.id === task.id) || (t.date === task.date && t.topic === task.topic && t.startTime === task.startTime)
         ? { ...t, completed: true }
         : t
     );
@@ -28,12 +28,14 @@ function Planner({ activePlanId, activeTimerId, secondsLeft, startGlobalTimer, o
       await updatePlanTasks(uid, activePlanId, updatedTasks);
     }
     
-    // 2. Auto-start logic for breaks
-    const taskIndex = tasks.findIndex(t => t.date === task.date && t.topic === task.topic && t.startTime === task.startTime);
+    // 2. Auto-start logic for breaks (Only if focus just completed)
+    const taskIndex = tasks.findIndex(t => 
+      (t.id && task.id && t.id === task.id) || (t.date === task.date && t.topic === task.topic && t.startTime === task.startTime)
+    );
     const nextTask = tasks[taskIndex + 1];
 
-    if (nextTask && (nextTask.topic.toLowerCase().includes("break") || nextTask.type === "break")) {
-      const uniqueId = `${nextTask.date}-${nextTask.startTime || 'slot'}-${nextTask.topic}`;
+    if (task.type === "focus" && nextTask && (nextTask.topic.toLowerCase().includes("break") || nextTask.type === "break")) {
+      const uniqueId = nextTask.id || `${nextTask.date}-${nextTask.startTime || 'slot'}-${nextTask.topic}`;
       startGlobalTimer(uniqueId, parseInt(nextTask.duration), nextTask.topic);
     } else {
       // 3. Reset timer and log session
@@ -117,7 +119,7 @@ function Planner({ activePlanId, activeTimerId, secondsLeft, startGlobalTimer, o
   async function toggleTask(task) {
     const isNowCompleted = !task.completed;
     const updatedTasks = tasks.map(t =>
-      t.date === task.date && t.topic === task.topic && t.startTime === task.startTime
+      (t.id && task.id && t.id === task.id) || (t.date === task.date && t.topic === task.topic && t.startTime === task.startTime)
         ? { ...t, completed: isNowCompleted }
         : t
     );
@@ -301,7 +303,7 @@ function Planner({ activePlanId, activeTimerId, secondsLeft, startGlobalTimer, o
             </Card>
           ) : (
             tasksForDay.map((task, index) => {
-              const uniqueId = `${task.date}-${task.startTime || index}-${task.topic}`;
+              const uniqueId = task.id || `${task.date}-${task.startTime || index}-${task.topic}`;
               return (
                 <Card key={uniqueId} className="card-hover">
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>

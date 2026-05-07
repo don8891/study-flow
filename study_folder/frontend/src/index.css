@@ -384,18 +384,23 @@ button:active {
   border-radius: 50%;
 }
 
-/* Exam tile gets a subtle glowing outer ring */
+/* Exam tile gets a subtle glowing outer ring and distinct color */
 .exam-tile {
-  border: 1px solid rgba(124, 58, 237, 0.4) !important;
+  background: linear-gradient(135deg, #7c3aed, #db2777) !important;
+  color: white !important;
+  font-weight: 800 !important;
+  box-shadow: 0 0 15px rgba(219, 39, 119, 0.6) !important;
+  border: 2px solid white !important;
 }
 
 .exam-tile::before {
   content: '🎯';
   position: absolute;
-  top: -4px;
-  right: -4px;
-  font-size: 0.9rem;
+  top: -8px;
+  right: -8px;
+  font-size: 1.1rem;
   z-index: 2;
+  filter: drop-shadow(0 0 5px rgba(0,0,0,0.5));
 }
 
 /* Custom In-line Timer Hover Button */
@@ -507,19 +512,24 @@ button:active {
     width: 100% !important;
   }
 
-  /* Headers stack vertically */
+  /* Headers stack vertically more gracefully */
   .page > header,
   .page header {
     flex-direction: column !important;
     align-items: flex-start !important;
-    gap: 10px !important;
+    gap: 15px !important;
     width: 100% !important;
   }
 
-  .page header > div,
-  .page header > h1 {
+  .page header > div {
     width: 100% !important;
-    flex-wrap: wrap !important;
+  }
+  
+  .page header > div:last-child {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-start;
   }
 
   /* Headings */

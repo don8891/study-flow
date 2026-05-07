@@ -53,6 +53,7 @@ export function generateTasks(topics, examDate, studyHours, startTimeStr) {
       const focusEnd = format(currentTimePointer, "hh:mm a");
 
       tasks.push({
+        id: `${dateStr}-${focusStart}-${subtopic.replace(/\s+/g, '-').toLowerCase()}`,
         date: dateStr,
         topic: subIndex === 0 && mainItem.subtopics && mainItem.subtopics.length > 0 
           ? `${mainItem.topic}: ${subtopic}` 
@@ -76,6 +77,7 @@ export function generateTasks(topics, examDate, studyHours, startTimeStr) {
       const breakEnd = format(currentTimePointer, "hh:mm a");
 
       tasks.push({
+        id: `${dateStr}-${breakStart}-break`,
         date: dateStr,
         topic: isLongBreak ? "Long Break 🧘" : "Short Break ☕",
         duration: breakDuration.toString(),
@@ -178,6 +180,7 @@ export function generateTasksFromDate(topics, startDate, studyHours, startTimeSt
       const focusEnd = format(currentTimePointer, "hh:mm a");
 
       tasks.push({
+        id: `${dateStr}-${focusStart}-${subtopic.replace(/\s+/g, '-').toLowerCase()}`,
         date: dateStr,
         topic:
           subIndex === 0 && mainItem.subtopics && mainItem.subtopics.length > 0
@@ -201,6 +204,7 @@ export function generateTasksFromDate(topics, startDate, studyHours, startTimeSt
       const breakEnd = format(currentTimePointer, "hh:mm a");
 
       tasks.push({
+        id: `${dateStr}-${breakStart}-break`,
         date: dateStr,
         topic: isLongBreak ? "Long Break 🧘" : "Short Break ☕",
         duration: breakDuration.toString(),

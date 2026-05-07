@@ -9,7 +9,7 @@ import { rescheduleMissedTasks } from "../utils/scheduler";
 async function toggleTaskComplete(task, tasks, setTasks, activePlanId) {
   const isNowCompleted = true; // Only marking as completed via timer
   const updatedTasks = tasks.map(t =>
-    t.date === task.date && t.topic === task.topic && t.startTime === task.startTime
+    (t.id && task.id && t.id === task.id) || (t.date === task.date && t.topic === task.topic && t.startTime === task.startTime)
       ? { ...t, completed: isNowCompleted }
       : t
   );
@@ -32,13 +32,15 @@ function Dashboard({ goToUpload, activePlanId, setActivePlanId, setPage, activeT
     // 1. Mark task as done locally and in Firestore (Dashboard logic)
     await toggleTaskComplete(task, tasks, setTasks, activePlanId);
     
-    // 2. Find next task for auto-start logic
-    const taskIndex = tasks.findIndex(t => t.date === task.date && t.topic === task.topic && t.startTime === task.startTime);
+    // 2. Find next task for auto-start logic (Only if focus just completed)
+    const taskIndex = tasks.findIndex(t => 
+      (t.id && task.id && t.id === task.id) || (t.date === task.date && t.topic === task.topic && t.startTime === task.startTime)
+    );
     const nextTask = tasks[taskIndex + 1];
 
-    if (nextTask && (nextTask.topic.toLowerCase().includes("break") || nextTask.type === "break")) {
+    if (task.type === "focus" && nextTask && (nextTask.topic.toLowerCase().includes("break") || nextTask.type === "break")) {
       // Auto-start next session if it's a break
-      const uniqueId = `${nextTask.date}-${nextTask.startTime || 'slot'}-${nextTask.topic}`;
+      const uniqueId = nextTask.id || `${nextTask.date}-${nextTask.startTime || 'slot'}-${nextTask.topic}`;
       startGlobalTimer(uniqueId, parseInt(nextTask.duration), nextTask.topic);
     } else {
       // 3. Reset timer and log session (Home logic)
@@ -268,7 +270,7 @@ function Dashboard({ goToUpload, activePlanId, setActivePlanId, setPage, activeT
                         duration={todayTasks.filter(t => !t.completed)[0].duration}
                         onComplete={() => handleManualComplete(todayTasks.filter(t => !t.completed)[0])}
                         completed={false}
-                        timerId={`${todayTasks.filter(t => !t.completed)[0].date}-${todayTasks.filter(t => !t.completed)[0].startTime || 'slot1'}-${todayTasks.filter(t => !t.completed)[0].topic}`}
+                        timerId={todayTasks.filter(t => !t.completed)[0].id || `${todayTasks.filter(t => !t.completed)[0].date}-${todayTasks.filter(t => !t.completed)[0].startTime || 'slot1'}-${todayTasks.filter(t => !t.completed)[0].topic}`}
                         activeTimerId={activeTimerId}
                         secondsLeft={secondsLeft}
                         startGlobalTimer={startGlobalTimer}
