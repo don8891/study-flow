@@ -4,6 +4,8 @@ import os
 import re
 import json
 import requests
+import shutil
+import subprocess
 from dotenv import load_dotenv
 from PyPDF2 import PdfReader
 from PIL import Image
@@ -18,7 +20,7 @@ CORS(app)
 
 @app.route("/")
 def home():
-    return "Backend running"
+    return jsonify({"status": "ok", "message": "Backend running"})
 
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -58,6 +60,23 @@ def call_ai(prompt, system_prompt="You are a helpful assistant.", max_tokens=102
     except Exception as e:
         print(f"Gemini failed: {e}")
         return None
+
+def ocr_with_gemini(filepath):
+    """Uses Gemini 1.5 Flash to extract text from images (OCR)."""
+    try:
+        model = genai.GenerativeModel("gemini-1.5-flash")
+        img = Image.open(filepath)
+        # Fix: Convert to RGB to handle PNG transparency/palette modes
+        img = img.convert("RGB")
+        # Using Gemini's multimodal capability
+        response = model.generate_content([
+            "Extract all the academic topics and text from this syllabus image. Only return the extracted text.",
+            img
+        ])
+        return response.text
+    except Exception as e:
+        print(f"Gemini OCR failed: {e}")
+        return ""
 
 
 # ── Syllabus Cleaning ────────────────────────────────────────
@@ -168,21 +187,28 @@ def login():
 
 @app.route("/upload-syllabus", methods=["POST"])
 def upload_syllabus():
-    file = request.files["file"]
-    filepath = os.path.join("uploads", file.filename)
-    file.save(filepath)
+    try:
+        file = request.files["file"]
+        filepath = os.path.join("uploads", file.filename)
+        file.save(filepath)
 
-    extracted_text = ""
-    if file.filename.lower().endswith(".pdf"):
-        reader = PdfReader(filepath)
-        for page in reader.pages:
-            extracted_text += page.extract_text() or ""
-    else:
-        image = Image.open(filepath)
-        extracted_text = pytesseract.image_to_string(image)
+        extracted_text = ""
+        if file.filename.lower().endswith(".pdf"):
+            reader = PdfReader(filepath)
+            for page in reader.pages:
+                extracted_text += page.extract_text() or ""
+        else:
+            # Use Gemini for OCR instead of Tesseract
+            extracted_text = ocr_with_gemini(filepath)
 
-    cleaned_text = clean_syllabus_text(extracted_text)
-    topics_raw = generate_structured_topics(cleaned_text)
+        if not extracted_text.strip():
+            return jsonify({"success": False, "message": "Could not extract text. Please try a clearer image or PDF."}), 400
+
+        cleaned_text = clean_syllabus_text(extracted_text)
+        topics_raw = generate_structured_topics(cleaned_text)
+    except Exception as e:
+        print(f"Syllabus extraction error: {e}")
+        return jsonify({"success": False, "message": f"Syllabus processing failed: {str(e)}"}), 500
 
     forbidden = ["mark", "score", "credit", "weightage", "hour", "exam",
                  "internal", "external", "total", "time", "hrs", "mins"]
@@ -424,6 +450,24 @@ def generate_image():
         print(f"Pollinations fallback failed: {e}")
 
     return jsonify({"success": False, "message": "Image generation failed"})
+
+
+@app.route("/debug-server")
+def debug_server():
+    """Debug endpoint to check environment and dependencies."""
+    tesseract_path = shutil.which("tesseract")
+    try:
+        genai_version = "available"
+    except:
+        genai_version = "missing"
+    
+    return jsonify({
+        "status": "online",
+        "tesseract_found": tesseract_path is not None,
+        "tesseract_path": tesseract_path,
+        "genai_status": genai_version,
+        "os": os.name
+    })
 
 
 if __name__ == "__main__":

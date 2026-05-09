@@ -21,27 +21,50 @@ export async function logoutUser() {
 
 const BACKEND_URL = "https://studyflow-backend-n0um.onrender.com";
 
+/**
+ * Enhanced fetch that automatically retries if the backend is waking up.
+ */
+async function fetchWithRetry(url, options, retries = 3, delay = 10000) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const res = await fetch(url, options);
+      const contentType = res.headers.get("content-type");
+
+      // If it's JSON, return it
+      if (contentType && contentType.includes("application/json")) {
+        return await res.json();
+      }
+
+      // If not JSON, it's likely Render waking up (returns HTML)
+      console.warn(`Attempt ${i + 1}: Backend is waking up... retrying in ${delay / 1000}s`);
+    } catch (err) {
+      console.error(`Attempt ${i + 1} failed:`, err);
+    }
+
+    if (i < retries - 1) {
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  throw new Error("Backend failed to start in time. Please refresh and try again.");
+}
+
 export async function uploadSyllabus(file, uid) {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("uid", uid);
 
-  const res = await fetch(`${BACKEND_URL}/upload-syllabus`, {
+  return fetchWithRetry(`${BACKEND_URL}/upload-syllabus`, {
     method: "POST",
     body: formData
   });
-
-  return res.json();
 }
 
 export async function callAI(task, content, syllabusContext = "") {
-  const res = await fetch(`${BACKEND_URL}/ai-assistant`, {
+  return fetchWithRetry(`${BACKEND_URL}/ai-assistant`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ task, content, syllabusContext })
   });
-
-  return res.json();
 }
 
 export async function generateConceptImage(concept, context = "") {

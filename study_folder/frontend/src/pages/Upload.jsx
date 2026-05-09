@@ -33,7 +33,7 @@ function Upload({
     }
 
     const uid = auth.currentUser.uid;
-    setStatus("Generating Your Plan...");
+    setStatus("⏳ Waking up AI server... (may take 30 seconds on first use)");
 
     try {
       const res = await uploadSyllabus(file, uid);
