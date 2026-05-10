@@ -61,22 +61,22 @@ def call_ai(prompt, system_prompt="You are a helpful assistant.", max_tokens=102
         print(f"Gemini failed: {e}")
         return None
 
-def ocr_with_gemini(filepath):
+def ocr_with_gemini(img):
     """Uses Gemini 1.5 Flash to extract text from images (OCR)."""
     try:
         model = genai.GenerativeModel("gemini-1.5-flash")
-        img = Image.open(filepath)
-        # Fix: Convert to RGB to handle PNG transparency/palette modes
-        img = img.convert("RGB")
+        if img.mode != "RGB":
+            img = img.convert("RGB")
+        
         # Using Gemini's multimodal capability
         response = model.generate_content([
-            "Extract all the academic topics and text from this syllabus image. Only return the extracted text.",
+            "Please read and extract all the text from this image. It is an academic syllabus. Return the text exactly as it appears.",
             img
         ])
-        return response.text
+        return response.text, None
     except Exception as e:
         print(f"Gemini OCR failed: {e}")
-        return ""
+        return "", str(e)
 
 
 # ── Syllabus Cleaning ────────────────────────────────────────
@@ -193,21 +193,57 @@ def upload_syllabus():
         file.save(filepath)
 
         extracted_text = ""
+        gemini_error = None
         if file.filename.lower().endswith(".pdf"):
             reader = PdfReader(filepath)
             for page in reader.pages:
                 extracted_text += page.extract_text() or ""
         else:
-            # Use Gemini for OCR instead of Tesseract
-            extracted_text = ocr_with_gemini(filepath)
+            # ── Image processing with preprocessing ──────────────
+            try:
+                image = Image.open(filepath)
+                image = image.convert("RGB")
+                
+                width, height = image.size
+                if width < 1000:
+                    scale = 1000 / width
+                    image = image.resize(
+                        (int(width * scale), int(height * scale)), 
+                        Image.LANCZOS
+                    )
+                
+                # Try Tesseract if configured
+                try:
+                    text = pytesseract.image_to_string(image, config="--psm 3")
+                    if text and len(text.strip()) > 50:
+                        extracted_text = text
+                except Exception as e:
+                    print(f"Tesseract failed: {e}")
+            except Exception as e:
+                print(f"Initial image processing failed: {e}")
 
-        if not extracted_text.strip():
-            return jsonify({"success": False, "message": "Could not extract text. Please try a clearer image or PDF."}), 400
+            # ── Fallback to Gemini AI if Tesseract failed or was missing ──
+            if not extracted_text or len(extracted_text.strip()) < 10:
+                print("Tesseract failed or missing, using Gemini AI...")
+                if 'image' not in locals():
+                    image = Image.open(filepath)
+                extracted_text, gemini_error = ocr_with_gemini(image)
+
+        if not extracted_text or len(extracted_text.strip()) < 10:
+            error_msg = "Could not extract text."
+            if gemini_error:
+                error_msg += f" AI Error: {gemini_error}"
+            else:
+                error_msg += f" (AI returned: '{extracted_text[:50]}')"
+            return jsonify({
+                "success": False, 
+                "message": error_msg + " Please try a clearer image or PDF."
+            }), 400
 
         cleaned_text = clean_syllabus_text(extracted_text)
         topics_raw = generate_structured_topics(cleaned_text)
     except Exception as e:
-        print(f"Syllabus extraction error: {e}")
+        print(f"Critical extraction error: {e}")
         return jsonify({"success": False, "message": f"Syllabus processing failed: {str(e)}"}), 500
 
     forbidden = ["mark", "score", "credit", "weightage", "hour", "exam",
@@ -452,20 +488,28 @@ def generate_image():
     return jsonify({"success": False, "message": "Image generation failed"})
 
 
-@app.route("/debug-server")
-def debug_server():
+@app.route("/debug")
+def debug():
     """Debug endpoint to check environment and dependencies."""
     tesseract_path = shutil.which("tesseract")
-    try:
-        genai_version = "available"
-    except:
-        genai_version = "missing"
+    tesseract_version = "not found"
+    if tesseract_path:
+        try:
+            result = subprocess.run(
+                ["tesseract", "--version"], 
+                capture_output=True, text=True
+            )
+            tesseract_version = result.stderr or result.stdout
+        except:
+            pass
     
     return jsonify({
         "status": "online",
         "tesseract_found": tesseract_path is not None,
         "tesseract_path": tesseract_path,
-        "genai_status": genai_version,
+        "tesseract_version": tesseract_version.split("\n")[0] if tesseract_version else "error",
+        "groq_key": bool(os.getenv("GROQ_API_KEY")),
+        "gemini_key": bool(os.getenv("GEMINI_API_KEY")),
         "os": os.name
     })
 

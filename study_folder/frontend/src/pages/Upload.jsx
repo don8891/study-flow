@@ -103,11 +103,11 @@ function Upload({
       </Card>
 
       <Card title="Upload Syllabus">
-        <p style={{ marginBottom: "15px", fontSize: "0.9rem" }}>Upload your syllabus in PDF or Image format.</p>
+        <p style={{ marginBottom: "15px", fontSize: "0.9rem" }}>Upload your syllabus in PDF format.</p>
         <div className="input-group">
           <input
             type="file"
-            accept=".pdf,image/*"
+            accept=".pdf"
             style={{ padding: "10px" }}
             onChange={(e) => setFile(e.target.files[0])}
           />
