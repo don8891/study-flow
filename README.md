@@ -2,7 +2,7 @@
 
 **AI-Powered Personalized Study Management System**
 
-> Live Demo: [study-flow-pi-six.vercel.app](https://study-flow-pi-six.vercel.app)
+> Live Demo: [https://studyflowproject.vercel.app/](https://studyflowproject.vercel.app/)
 
 Study Flow transforms your raw syllabus into a structured, AI-driven learning path. Upload a PDF or image of your syllabus, and the app extracts topics, builds a personalized Pomodoro-based study schedule, lets you chat with an AI tutor, generates quizzes, and tracks your XP and streaks — all in one platform.
 
